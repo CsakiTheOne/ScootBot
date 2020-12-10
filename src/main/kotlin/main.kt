@@ -1,10 +1,19 @@
 import net.dv8tion.jda.api.EmbedBuilder
 import java.awt.Color
 
-fun main() {
-    val data = Data.load()
-    val bot = Bot(Secret.getToken("start"))
+lateinit var data: Data
+lateinit var bot: Bot
 
+fun main() {
+    data = Data.load()
+    bot = Bot(Secret.getToken("start"))
+
+    setBasicCommands()
+    setBasicTriggers()
+    setClickerGame()
+}
+
+fun setBasicCommands() {
     bot.commands["help"] = {
         val helpMessage = "Parancsok (mindegyik elé `${bot.prefix}`):\n" +
                 bot.commands.keys.joinToString() +
@@ -46,15 +55,62 @@ fun main() {
     bot.commands["brainfuck"] = {
         it.channel.sendMessage(
             EmbedBuilder()
-                    .setTitle("Brainfuck")
-                    .setDescription("Bemenet:\n`${it.contentRaw.split(' ')[1]}`\nKimenet:\n`${Brainfuck.run(it.contentRaw.split(' ')[1])}`")
+                .setTitle("Brainfuck")
+                .setDescription(
+                    "Bemenet:\n`${it.contentRaw.split(' ')[1]}`\nKimenet:\n`${
+                        Brainfuck.run(
+                            it.contentRaw.split(
+                                ' '
+                            )[1]
+                        )
+                    }`"
+                )
                 .build()
         ).queue()
     }
 
+    bot.commands["szegz"] = {
+        val userFrom = it.author.asMention
+        val userTo = it.contentRaw.split(' ')[1]
+        it.channel.sendMessage("$userFrom megszegzeli őt: $userTo").queue { msg ->
+            msg.addReaction(listOf("❤️", "\uD83D\uDE0F", "\uD83D\uDE1C", "\uD83D\uDE2E").random()).queue()
+        }
+        data.addStat("Szegz")
+    }
+
+    bot.commands["lolchamp"] = {
+        val champ = LolChampions.list.random()
+        it.channel.sendMessage(
+            EmbedBuilder()
+                .setTitle(champ)
+                .setDescription("https://na.leagueoflegends.com/en-us/champions/${champ.toLowerCase()}/")
+                .build()
+        ).queue()
+    }
+}
+
+fun setBasicTriggers() {
+    bot.triggers["szeret"] = {
+        it.addReaction("❤️").queue()
+        data.addStat("Szeretet")
+    }
+
+    bot.triggers["yeet"] = {
+        it.addReaction("\uD83D\uDCA8").queue()
+        data.addStat("Yeet")
+    }
+
+    bot.triggers["vices"] = {
+        it.addReaction("\uD83D\uDE02").queue()
+        data.addStat("Vices")
+    }
+}
+
+fun setClickerGame() {
     bot.commands["clicker"] = {
         it.channel.sendMessage(
             EmbedBuilder()
+                .setColor(Color((0..255).random(), (0..255).random(), (0..255).random()))
                 .setTitle("Clicker játék")
                 .setDescription("0")
                 .build()
@@ -64,16 +120,6 @@ fun main() {
             clickerMessage.addReaction("\uD83D\uDDB1").queue()
             clickerMessage.addReaction("❌").queue()
         }
-    }
-
-    bot.triggers["szeret"] = {
-        it.addReaction("❤️").queue()
-        data.addStat("Szeretet")
-    }
-
-    bot.triggers["yeet"] = {
-        it.addReaction("\uD83D\uDCA8").queue()
-        data.addStat("Yeet")
     }
 
     bot.reactionListeners.add {
@@ -90,6 +136,7 @@ fun main() {
             val oldValue = msg.embeds[0].description
             msg.editMessage(
                 EmbedBuilder()
+                    .setColor(Color((0..255).random(), (0..255).random(), (0..255).random()))
                     .setTitle("Clicker játék")
                     .setDescription(((oldValue?.toInt() ?: 0) + 1).toString())
                     .build()
