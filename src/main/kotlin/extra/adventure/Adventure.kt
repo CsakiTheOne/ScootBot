@@ -27,22 +27,20 @@ class Adventure {
             return "X: $playerX Y: $playerY\n${map[playerX][playerY]}"
         }
 
-        private fun refreh(data: Data) {
-            data.adventureMessages.forEach {
-                it.editMessage(
-                    EmbedBuilder()
-                        .setTitle("Gombóc kaland")
-                        .setDescription(getDescription())
-                        .build()
-                ).queue { adventureMessage ->
-                    adventureMessage.addReaction("⬅").queue()
-                    adventureMessage.addReaction("⬆").queue()
-                    adventureMessage.addReaction("⬇").queue()
-                    adventureMessage.addReaction("➡").queue()
-                    adventureMessage.addReaction("🅰").queue()
-                    adventureMessage.addReaction("🅱").queue()
-                    adventureMessage.addReaction("❌").queue()
-                }
+        private fun refreh(msg: Message) {
+            msg.editMessage(
+                EmbedBuilder()
+                    .setTitle("Gombóc kaland")
+                    .setDescription(getDescription())
+                    .build()
+            ).queue { adventureMessage ->
+                adventureMessage.addReaction("⬅").queue()
+                adventureMessage.addReaction("⬆").queue()
+                adventureMessage.addReaction("⬇").queue()
+                adventureMessage.addReaction("➡").queue()
+                adventureMessage.addReaction("🅰").queue()
+                adventureMessage.addReaction("🅱").queue()
+                adventureMessage.addReaction("❌").queue()
             }
         }
 
@@ -60,8 +58,6 @@ class Adventure {
                 adventureMessage.addReaction("🅰").queue()
                 adventureMessage.addReaction("🅱").queue()
                 adventureMessage.addReaction("❌").queue()
-                data.adventureMessages.add(adventureMessage)
-                data.save()
             }
         }
 
@@ -86,14 +82,11 @@ class Adventure {
                     map[playerX][playerY] = ""
                 }
                 "❌" -> {
-                    data.adventureMessages.remove(msg)
-                    data.save()
                     msg.delete().queue()
                 }
             }
-            msg.removeReaction(event.reactionEmote.name, event.user!!).queue {
-                refreh(data)
-            }
+            msg.removeReaction(event.reactionEmote.name, event.user!!).queue()
+            refreh(msg)
         }
     }
 }

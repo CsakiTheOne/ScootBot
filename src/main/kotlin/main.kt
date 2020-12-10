@@ -171,7 +171,7 @@ fun setAdventureGame() {
 
     bot.reactionListeners.add {
         it.retrieveMessage().queue { msg ->
-            if (!data.adventureMessages.contains(msg)) return@queue
+            if (msg.embeds[0].title != "Gombóc kaland") return@queue
             Adventure.buttonPressed(data, it, msg)
         }
     }

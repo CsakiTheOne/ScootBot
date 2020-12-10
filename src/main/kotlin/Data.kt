@@ -6,7 +6,6 @@ import java.lang.Exception
 
 class Data() {
     var clickerMessageIds = mutableListOf<String>()
-    var adventureMessages = mutableListOf<Message>()
     var stat = mutableMapOf<String, Int>()
 
     fun addStat(name: String, value: Int = 1) {
