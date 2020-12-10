@@ -4,6 +4,13 @@ import java.lang.Exception
 
 class Data() {
     var clickerMessageIds = mutableListOf<String>()
+    var stat = mutableMapOf<String, Int>()
+
+    fun addStat(name: String, value: Int = 1) {
+        stat[name] = (stat[name]?: 0) + value
+        stat = stat.toSortedMap()
+        save()
+    }
 
     fun save() {
         val gson = Gson()

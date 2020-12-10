@@ -9,7 +9,7 @@ fun main() {
         val helpMessage = "Parancsok (mindegyik elé `${bot.prefix}`):\n" +
                 bot.commands.keys.joinToString() +
                 "\n\nKifejezések, amikre reagálok:\n" +
-                bot.triggers.joinToString { t -> t.regex }
+                bot.triggers.keys.joinToString()
         it.channel.sendMessage(
             EmbedBuilder()
                 .setColor(Color(0, 128, 255))
@@ -19,8 +19,16 @@ fun main() {
         ).queue()
     }
 
+    bot.commands["stat reset"] = {
+        data.stat = mutableMapOf()
+        data.save()
+    }
+
     bot.commands["stat"] = {
-        val statMessage = bot.triggers.map { t -> "${t.regex}: ${t.getCount()}" }.joinToString("\n")
+        val statMessage = if (data.stat.isNullOrEmpty())
+            "Üres"
+        else
+            data.stat.map { s -> "${s.key}: ${s.value}" }.joinToString("\n")
         it.channel.sendMessage(
             EmbedBuilder()
                 .setColor(Color(0, 128, 255))
@@ -32,6 +40,7 @@ fun main() {
 
     bot.commands["ping"] = {
         it.channel.sendMessage(":ping_pong:").queue()
+        data.addStat("Ping")
     }
 
     bot.commands["brainfuck"] = {
@@ -57,13 +66,15 @@ fun main() {
         }
     }
 
-    bot.triggers.add(TriggerWord("szeret") {
+    bot.triggers["szeret"] = {
         it.addReaction("❤️").queue()
-    })
+        data.addStat("Szeretet")
+    }
 
-    bot.triggers.add(TriggerWord("yeet") {
+    bot.triggers["yeet"] = {
         it.addReaction("\uD83D\uDCA8").queue()
-    })
+        data.addStat("Yeet")
+    }
 
     bot.reactionListeners.add {
         if (!data.clickerMessageIds.contains(it.messageId)) return@add
@@ -84,6 +95,7 @@ fun main() {
                     .build()
             ).queue { _ ->
                 it.reaction.removeReaction(it.user!!).queue()
+                data.addStat("Click")
             }
         }
     }

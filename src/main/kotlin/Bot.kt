@@ -9,7 +9,7 @@ import net.dv8tion.jda.api.requests.GatewayIntent
 class Bot(token: String) {
     var prefix = "."
     val commands = mutableMapOf<String, (msg: Message) -> Unit>()
-    val triggers = mutableListOf<TriggerWord>()
+    val triggers = mutableMapOf<String, (msg: Message) -> Unit>()
     val reactionListeners = mutableListOf<(e: MessageReactionAddEvent) -> Unit>()
 
     init {
@@ -27,8 +27,8 @@ class Bot(token: String) {
                         }
                     }
                     for (trigger in triggers) {
-                        if (trigger.regex.toRegex().containsMatchIn(msg.contentRaw.toLowerCase())) {
-                            trigger.execute(msg)
+                        if (trigger.key.toRegex().containsMatchIn(msg.contentRaw.toLowerCase())) {
+                            trigger.value(msg)
                         }
                     }
                 }
