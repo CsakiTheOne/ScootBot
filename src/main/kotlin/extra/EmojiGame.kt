@@ -1,3 +1,5 @@
+package extra
+
 class EmojiGame {
     companion object {
         val hats = listOf(" ", "💩", "👒", "🎩", "🎓")

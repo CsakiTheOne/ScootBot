@@ -1,4 +1,11 @@
+import extra.Brainfuck
+import extra.EmojiGame
+import extra.LolChampions
+import extra.adventure.Adventure
 import net.dv8tion.jda.api.EmbedBuilder
+import net.dv8tion.jda.api.entities.Emote
+import net.dv8tion.jda.api.managers.EmoteManager
+import net.dv8tion.jda.internal.entities.EmoteImpl
 import java.awt.Color
 
 lateinit var data: Data
@@ -11,6 +18,7 @@ fun main() {
     setBasicCommands()
     setBasicTriggers()
     setClickerGame()
+    setAdventureGame()
 }
 
 fun setBasicCommands() {
@@ -154,6 +162,17 @@ fun setClickerGame() {
                 it.reaction.removeReaction(it.user!!).queue()
                 data.addStat("Click")
             }
+        }
+    }
+}
+
+fun setAdventureGame() {
+    bot.commands["adventure"] = { Adventure.startNew(data, it) }
+
+    bot.reactionListeners.add {
+        it.retrieveMessage().queue { msg ->
+            if (!data.adventureMessages.contains(msg)) return@queue
+            Adventure.buttonPressed(data, it, msg)
         }
     }
 }

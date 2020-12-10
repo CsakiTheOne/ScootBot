@@ -1,3 +1,5 @@
+package extra
+
 class LolChampions {
     companion object {
         val list = listOf(

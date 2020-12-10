@@ -1,8 +1,6 @@
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.OnlineStatus
-import net.dv8tion.jda.api.entities.Activity
-import net.dv8tion.jda.api.entities.Message
-import net.dv8tion.jda.api.entities.SelfUser
+import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent
@@ -64,4 +62,8 @@ class Bot(token: String) {
     }
 
     fun getSelf() = self
+
+    fun getEmote(guild: Guild, name: String) : Emote {
+        return guild.emotes.first { it.name == name }
+    }
 }
