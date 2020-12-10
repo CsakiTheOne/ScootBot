@@ -8,7 +8,6 @@ class Data() {
 
     fun addStat(name: String, value: Int = 1) {
         stat[name] = (stat[name]?: 0) + value
-        stat = stat.toSortedMap()
         save()
     }
 
