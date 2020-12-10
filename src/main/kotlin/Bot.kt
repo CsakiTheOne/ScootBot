@@ -24,7 +24,7 @@ class Bot(token: String) {
                 override fun onMessageReceived(event: MessageReceivedEvent) {
                     val msg = event.message
                     for (command in commands) {
-                        if (msg.contentRaw == prefix + command.key) {
+                        if (msg.contentRaw.startsWith(prefix + command.key)) {
                             command.value(msg)
                             msg.delete().queue()
                         }

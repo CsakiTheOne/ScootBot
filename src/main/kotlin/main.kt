@@ -34,6 +34,15 @@ fun main() {
         it.channel.sendMessage(":ping_pong:").queue()
     }
 
+    bot.commands["brainfuck"] = {
+        it.channel.sendMessage(
+            EmbedBuilder()
+                    .setTitle("Brainfuck")
+                    .setDescription("Bemenet:\n`${it.contentRaw.split(' ')[1]}`\nKimenet:\n`${Brainfuck.run(it.contentRaw.split(' ')[1])}`")
+                .build()
+        ).queue()
+    }
+
     bot.commands["clicker"] = {
         it.channel.sendMessage(
             EmbedBuilder()
