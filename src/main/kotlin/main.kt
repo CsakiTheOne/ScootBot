@@ -18,7 +18,8 @@ fun setBasicCommands() {
         val helpMessage = "Parancsok (mindegyik elé `${bot.prefix}`):\n" +
                 bot.commands.keys.joinToString() +
                 "\n\nKifejezések, amikre reagálok:\n" +
-                bot.triggers.keys.joinToString()
+                bot.triggers.keys.joinToString() +
+                "\n\nHa idle vagyok, akkor épp dolgoznak a kódomon és nem biztos, hogy mindenre reagálni fogok."
         it.channel.sendMessage(
             EmbedBuilder()
                 .setColor(Color(0, 128, 255))
@@ -26,6 +27,15 @@ fun setBasicCommands() {
                 .setDescription(helpMessage)
                 .build()
         ).queue()
+    }
+
+    bot.commands["ping"] = {
+        it.channel.sendMessage(":ping_pong:").queue()
+        data.addStat("Ping")
+    }
+
+    bot.commands["mondd"] = {
+        it.channel.sendMessage(it.contentRaw.replace(".mondd", "")).queue()
     }
 
     bot.commands["stat reset"] = {
@@ -45,11 +55,6 @@ fun setBasicCommands() {
                 .setDescription(statMessage)
                 .build()
         ).queue()
-    }
-
-    bot.commands["ping"] = {
-        it.channel.sendMessage(":ping_pong:").queue()
-        data.addStat("Ping")
     }
 
     bot.commands["brainfuck"] = {
@@ -86,6 +91,11 @@ fun setBasicCommands() {
                 .setDescription("https://na.leagueoflegends.com/en-us/champions/${champ.toLowerCase()}/")
                 .build()
         ).queue()
+    }
+
+    bot.commands["emojigame"] = {
+        it.channel.sendMessage(EmojiGame.generate()).queue()
+        data.addStat("Emoji játék")
     }
 }
 

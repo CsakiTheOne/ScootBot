@@ -1,8 +1,10 @@
 import com.google.gson.Gson
+import net.dv8tion.jda.api.OnlineStatus
 import java.io.File
 import java.lang.Exception
 
 class Data() {
+    var lastStatus = OnlineStatus.ONLINE
     var clickerMessageIds = mutableListOf<String>()
     var stat = mutableMapOf<String, Int>()
 
