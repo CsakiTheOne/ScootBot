@@ -1,16 +1,13 @@
-import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.entities.Message
-import net.dv8tion.jda.api.entities.MessageReaction
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.requests.GatewayIntent
-import java.awt.Color
 
 class Bot(token: String) {
-    val prefix = "."
+    var prefix = "."
     val commands = mutableMapOf<String, (msg: Message) -> Unit>()
     val triggers = mutableListOf<TriggerWord>()
     val reactionListeners = mutableListOf<(e: MessageReactionAddEvent) -> Unit>()

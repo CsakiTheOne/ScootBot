@@ -2,8 +2,8 @@ import net.dv8tion.jda.api.EmbedBuilder
 import java.awt.Color
 
 fun main() {
+    val data = Data.load()
     val bot = Bot(Secret.getToken("start"))
-    val clickerMessageIds = mutableListOf<String>()
 
     bot.commands["help"] = {
         val helpMessage = "Parancsok (mindegyik elé `${bot.prefix}`):\n" +
@@ -50,7 +50,8 @@ fun main() {
                 .setDescription("0")
                 .build()
         ).queue { clickerMessage ->
-            clickerMessageIds.add(clickerMessage.id)
+            data.clickerMessageIds.add(clickerMessage.id)
+            data.save()
             clickerMessage.addReaction("\uD83D\uDDB1").queue()
             clickerMessage.addReaction("❌").queue()
         }
@@ -65,10 +66,11 @@ fun main() {
     })
 
     bot.reactionListeners.add {
-        if (!clickerMessageIds.contains(it.messageId)) return@add
+        if (!data.clickerMessageIds.contains(it.messageId)) return@add
         if (it.reactionEmote.emoji == "❌") {
             it.retrieveMessage().queue { msg ->
-                clickerMessageIds.remove(msg.id)
+                data.clickerMessageIds.remove(msg.id)
+                data.save()
                 msg.delete().queue()
             }
             return@add

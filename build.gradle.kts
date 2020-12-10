@@ -16,6 +16,7 @@ repositories {
 dependencies {
     implementation("net.dv8tion:JDA:4.2.0_222")
     implementation("ch.qos.logback:logback-classic:1.2.3")
+    implementation("com.google.code.gson:gson:2.8.6")
     testImplementation(kotlin("test-junit"))
 }
 
