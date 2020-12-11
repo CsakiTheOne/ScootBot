@@ -3,6 +3,7 @@ import extra.EmojiGame
 import extra.LolChampions
 import extra.adventure.Adventure
 import net.dv8tion.jda.api.EmbedBuilder
+import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Emote
 import net.dv8tion.jda.api.managers.EmoteManager
 import net.dv8tion.jda.internal.entities.EmoteImpl
@@ -15,10 +16,32 @@ fun main() {
     data = Data.load()
     bot = Bot(Secret.getToken("start"))
 
+    setAdminCommands()
     setBasicCommands()
     setBasicTriggers()
     setClickerGame()
     setAdventureGame()
+}
+
+fun setAdminCommands() {
+    bot.adminCommands["idle toggle"] = {
+        bot.getSelf().jda.presence.setStatus(
+            if (bot.getSelf().jda.presence.status == OnlineStatus.IDLE) OnlineStatus.ONLINE
+            else OnlineStatus.IDLE
+        )
+        println("Status set to ${bot.getSelf().jda.presence.status.name}")
+    }
+
+    bot.adminCommands["guild trust"] = {
+        data.trustedGuilds.add(it.guild.id)
+        data.save()
+        it.channel.sendMessage("Ez jó helynek tűnik, bízok bennetek. :relieved: :heart:").queue()
+    }
+
+    bot.adminCommands["guild danger"] = {
+        data.trustedGuilds.remove(it.guild.id)
+        data.save()
+    }
 }
 
 fun setBasicCommands() {
@@ -43,7 +66,7 @@ fun setBasicCommands() {
     }
 
     bot.commands["mondd"] = {
-        it.channel.sendMessage(it.contentRaw.replace(".mondd", "")).queue()
+        it.channel.sendMessage("*${it.contentRaw.removePrefix(".mondd ")}*").queue()
     }
 
     bot.commands["stat reset"] = {
@@ -167,7 +190,14 @@ fun setClickerGame() {
 }
 
 fun setAdventureGame() {
-    bot.commands["adventure"] = { Adventure.startNew(data, it) }
+    bot.commands["adventure"] = {
+        if (data.trustedGuilds.contains(it.guild.id)) {
+            Adventure.startNew(data, it)
+        }
+        else {
+            it.channel.sendMessage("Ezen a szerveren nem működik a kaland játék.").queue()
+        }
+    }
 
     bot.reactionListeners.add {
         it.retrieveMessage().queue { msg ->

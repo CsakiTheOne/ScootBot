@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.requests.GatewayIntent
 
 class Bot(token: String) {
     var prefix = "."
+    val adminCommands = mutableMapOf<String, (msg: Message) -> Unit>()
     val commands = mutableMapOf<String, (msg: Message) -> Unit>()
     val triggers = mutableMapOf<String, (msg: Message) -> Unit>()
     val reactionListeners = mutableListOf<(e: MessageReactionAddEvent) -> Unit>()
@@ -26,26 +27,26 @@ class Bot(token: String) {
                 }
                 override fun onMessageReceived(event: MessageReceivedEvent) {
                     val msg = event.message
-                    if (msg.contentRaw == ".debug") {
-                        self.jda.presence.setStatus(
-                            if (self.jda.presence.status == OnlineStatus.IDLE) OnlineStatus.ONLINE
-                            else OnlineStatus.IDLE
-                        )
-                        println("Status set to ${self.jda.presence.status.name}")
-                        msg.delete().queue()
-                        return
+                    for (aCommand in adminCommands) {
+                        if (msg.author.id != "259610472729280513") return
+                        if (msg.contentRaw.startsWith(prefix + aCommand.key) ||
+                            msg.contentRaw.startsWith(self.asMention + " " + aCommand.key)) {
+                            println("Admin command received: ${msg.contentRaw} Author: ${msg.author.name} (${msg.author.id})")
+                            aCommand.value(msg)
+                            msg.delete().queue()
+                        }
                     }
                     for (command in commands) {
                         if (msg.contentRaw.startsWith(prefix + command.key) ||
                             msg.contentRaw.startsWith(self.asMention + " " + command.key)) {
-                            println("Command received: ${msg.contentRaw} Author: ${msg.author.name}")
+                            println("Command received: ${msg.contentRaw} Author: ${msg.author.name} (${msg.author.id})")
                             command.value(msg)
                             msg.delete().queue()
                         }
                     }
                     for (trigger in triggers) {
                         if (trigger.key.toRegex().containsMatchIn(msg.contentRaw.toLowerCase())) {
-                            println("Trigger found in message: ${msg.contentRaw} Author: ${msg.author.name}")
+                            println("Trigger found in message: ${msg.contentRaw} Author: ${msg.author.name} (${msg.author.id})")
                             trigger.value(msg)
                         }
                     }
