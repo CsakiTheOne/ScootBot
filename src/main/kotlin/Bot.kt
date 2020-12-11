@@ -27,26 +27,30 @@ class Bot(token: String) {
                 }
                 override fun onMessageReceived(event: MessageReceivedEvent) {
                     val msg = event.message
+                    val content = msg.contentRaw.replace("<@!", "<@")
+                    if (!msg.isFromGuild) {
+                        println("Private message from ${msg.author.name}: $content")
+                    }
                     for (aCommand in adminCommands) {
                         if (msg.author.id != "259610472729280513") return
-                        if (msg.contentRaw.startsWith(prefix + aCommand.key) ||
-                            msg.contentRaw.startsWith(self.asMention + " " + aCommand.key)) {
-                            println("Admin command received: ${msg.contentRaw} Author: ${msg.author.name} (${msg.author.id})")
+                        if (content.startsWith(prefix + aCommand.key) ||
+                            content.startsWith(self.asMention + " " + aCommand.key)) {
+                            println("Admin command received: $content Author: ${msg.author.name} (${msg.author.id})")
                             aCommand.value(msg)
                             msg.delete().queue()
                         }
                     }
                     for (command in commands) {
-                        if (msg.contentRaw.startsWith(prefix + command.key) ||
-                            msg.contentRaw.startsWith(self.asMention + " " + command.key)) {
-                            println("Command received: ${msg.contentRaw} Author: ${msg.author.name} (${msg.author.id})")
+                        if (content.startsWith(prefix + command.key) ||
+                            content.startsWith(self.asMention + " " + command.key)) {
+                            println("Command received: $content Author: ${msg.author.name} (${msg.author.id})")
                             command.value(msg)
                             msg.delete().queue()
                         }
                     }
                     for (trigger in triggers) {
-                        if (trigger.key.toRegex().containsMatchIn(msg.contentRaw.toLowerCase())) {
-                            println("Trigger found in message: ${msg.contentRaw} Author: ${msg.author.name} (${msg.author.id})")
+                        if (trigger.key.toRegex().containsMatchIn(content.toLowerCase())) {
+                            println("Trigger found in message: $content Author: ${msg.author.name} (${msg.author.id})")
                             trigger.value(msg)
                         }
                     }

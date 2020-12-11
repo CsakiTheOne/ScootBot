@@ -42,6 +42,14 @@ fun setAdminCommands() {
         data.trustedGuilds.remove(it.guild.id)
         data.save()
     }
+
+    bot.adminCommands["print self"] = {
+        println(bot.getSelf().asMention)
+    }
+
+    bot.adminCommands["print"] = {
+        println(it.contentRaw)
+    }
 }
 
 fun setBasicCommands() {
