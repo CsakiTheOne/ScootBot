@@ -51,7 +51,7 @@ class Bot(token: String) {
                         }
                     }
                     for (trigger in triggers) {
-                        if (trigger.key.toRegex().containsMatchIn(content.toLowerCase())) {
+                        if (trigger.key.toRegex().matches(content.toLowerCase())) {
                             Data.log("Bot", "Trigger found in message: $content Author: ${msg.author.name} (${msg.author.id})")
                             trigger.value(msg)
                             break
@@ -60,6 +60,14 @@ class Bot(token: String) {
                 }
                 override fun onMessageReactionAdd(event: MessageReactionAddEvent) {
                     if (event.user?.isBot == true) return
+                    if (event.reactionEmote.emoji == "❌") {
+                        event.retrieveMessage().queue { msg ->
+                            val isRemovable = msg.reactions.any { react ->
+                                react.isSelf && react.reactionEmote.emoji == "❌"
+                            }
+                            if (isRemovable) msg.delete().queue()
+                        }
+                    }
                     for (reactionListener in reactionListeners) {
                         reactionListener(event)
                     }
@@ -70,4 +78,10 @@ class Bot(token: String) {
     }
 
     fun getSelf() = self
+
+    companion object {
+        fun Message?.makeRemovable(callback: (() -> Unit)? = null) {
+            this?.addReaction("❌")?.queue { callback?.invoke() }
+        }
+    }
 }

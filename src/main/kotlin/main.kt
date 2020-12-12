@@ -1,3 +1,4 @@
+import Bot.Companion.makeRemovable
 import extra.Brainfuck
 import extra.EmojiGame
 import extra.LolChampions
@@ -5,6 +6,7 @@ import extra.adventure.Adventure
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Emote
+import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.managers.EmoteManager
 import net.dv8tion.jda.internal.entities.EmoteImpl
 import java.awt.Color
@@ -36,7 +38,7 @@ fun setAdminCommands() {
     bot.adminCommands["guild trust"] = {
         data.trustedGuilds.add(it.guild.id)
         data.save()
-        it.channel.sendMessage("Ez jó helynek tűnik, bízok bennetek. :relieved: :heart:").queue()
+        it.channel.sendMessage("Ez jó helynek tűnik, bízok bennetek. :relieved: :heart:").queue { msg -> msg.makeRemovable() }
     }
 
     bot.adminCommands["guild danger"] = {
@@ -59,7 +61,7 @@ fun setBasicCommands() {
         val helpMessage = "Parancsok (mindegyik elé `${bot.prefix}`):\n" +
                 bot.commands.keys.joinToString() +
                 "\n\nKifejezések, amikre reagálok:\n" +
-                bot.triggers.keys.joinToString() +
+                bot.triggers.keys.joinToString().replace(".*", "\\*").replace("|", "/") +
                 "\n\nHa idle vagyok, akkor épp dolgoznak a kódomon és nem biztos, hogy mindenre reagálni fogok."
         it.channel.sendMessage(
             EmbedBuilder()
@@ -67,7 +69,7 @@ fun setBasicCommands() {
                 .setTitle("Gombóc segítség")
                 .setDescription(helpMessage)
                 .build()
-        ).queue()
+        ).queue { msg -> msg.makeRemovable() }
     }
 
     bot.commands["ping"] = {
@@ -127,7 +129,7 @@ fun setBasicCommands() {
                 .setTitle("Statisztika")
                 .setDescription(statMessage)
                 .build()
-        ).queue()
+        ).queue { msg -> msg.makeRemovable() }
     }
 
     bot.commands["brainfuck"] = {
@@ -171,14 +173,14 @@ fun setBasicCommands() {
         data.guestbook.add(it.author.asTag)
         data.stat["Vendégkönyv"] = data.guestbook.size
         data.save()
-        it.channel.sendMessage("Felírtalak a vendégkönyvbe! :book::pen_ballpoint:").queue()
+        it.channel.sendMessage("Felírtalak a vendégkönyvbe! :book::pen_ballpoint:").queue { msg -> msg.makeRemovable() }
     }
 
     bot.commands["vendégkönyv töröl"] = {
         data.guestbook.remove(it.author.asTag)
         data.stat["Vendégkönyv"] = data.guestbook.size
         data.save()
-        it.channel.sendMessage("Töröltelek a vendégkönyvből").queue()
+        it.channel.sendMessage("Töröltelek a vendégkönyvből").queue { msg -> msg.makeRemovable() }
     }
 
     bot.commands["vendégkönyv"] = {
@@ -188,27 +190,39 @@ fun setBasicCommands() {
                 .setTitle("Vendégkönyv")
                 .setDescription(data.guestbook.joinToString())
                 .build()
-        ).queue()
+        ).queue { msg -> msg.makeRemovable() }
     }
 }
 
 fun setBasicTriggers() {
-    bot.triggers["szeret"] = {
+    bot.triggers["kő|papír|olló"] = {
+        val answers = listOf("Kő", "Papír", "Olló")
+        it.channel.sendMessage(answers.random()).queue()
+        data.addStat("Kő papír olló")
+    }
+
+    bot.triggers["🪨|🧻|✂️"] = {
+        val answers = listOf(":rock:", ":roll_of_paper:", ":scissors:")
+        it.channel.sendMessage(answers.random()).queue()
+        data.addStat("Kő papír olló")
+    }
+
+    bot.triggers[".*szeret.*"] = {
         it.addReaction("❤️").queue()
         data.addStat("Szeretet")
     }
 
-    bot.triggers["yeet"] = {
+    bot.triggers[".*yeet.*"] = {
         it.addReaction("\uD83D\uDCA8").queue()
         data.addStat("Yeet")
     }
 
-    bot.triggers["vices"] = {
+    bot.triggers[".*vices.*"] = {
         it.addReaction("\uD83D\uDE02").queue()
         data.addStat("Vices")
     }
 
-    bot.triggers["sziasztok"] = {
+    bot.triggers[".*sziasztok.*"] = {
         val greetings = listOf("Szia!", "Hali!", "Henlo!", "Hey!")
         it.channel.sendMessage(greetings.random()).queue()
     }
