@@ -43,8 +43,9 @@ fun setAdminCommands() {
         data.save()
     }
 
-    bot.adminCommands["print self"] = {
-        println(bot.getSelf().asMention)
+    bot.adminCommands["debug"] = {
+        println(it.author.name)
+        println(it.author.asTag)
     }
 
     bot.adminCommands["print"] = {
@@ -136,6 +137,30 @@ fun setBasicCommands() {
         it.channel.sendMessage(EmojiGame.generate()).queue()
         data.addStat("Emoji játék")
     }
+
+    bot.commands["vendégkönyv felír"] = {
+        data.guestbook.add(it.author.asTag)
+        data.stat["Vendégkönyv"] = data.guestbook.size
+        data.save()
+        it.channel.sendMessage("Felírtalak a vendégkönyvbe! :book::pen_ballpoint:").queue()
+    }
+
+    bot.commands["vendégkönyv töröl"] = {
+        data.guestbook.remove(it.author.asTag)
+        data.stat["Vendégkönyv"] = data.guestbook.size
+        data.save()
+        it.channel.sendMessage("Töröltelek a vendégkönyvből").queue()
+    }
+
+    bot.commands["vendégkönyv"] = {
+        it.channel.sendMessage(
+            EmbedBuilder()
+                .setColor(Color(0, 128, 255))
+                .setTitle("Vendégkönyv")
+                .setDescription(data.guestbook.joinToString())
+                .build()
+        ).queue()
+    }
 }
 
 fun setBasicTriggers() {
@@ -152,6 +177,11 @@ fun setBasicTriggers() {
     bot.triggers["vices"] = {
         it.addReaction("\uD83D\uDE02").queue()
         data.addStat("Vices")
+    }
+
+    bot.triggers["sziasztok"] = {
+        val greetings = listOf("Szia!", "Hali!", "Henlo!", "Hey!")
+        it.channel.sendMessage(greetings.random()).queue()
     }
 }
 

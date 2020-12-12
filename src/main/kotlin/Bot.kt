@@ -38,6 +38,7 @@ class Bot(token: String) {
                             println("Admin command received: $content Author: ${msg.author.name} (${msg.author.id})")
                             aCommand.value(msg)
                             msg.delete().queue()
+                            break
                         }
                     }
                     for (command in commands) {
@@ -46,12 +47,14 @@ class Bot(token: String) {
                             println("Command received: $content Author: ${msg.author.name} (${msg.author.id})")
                             command.value(msg)
                             msg.delete().queue()
+                            break
                         }
                     }
                     for (trigger in triggers) {
                         if (trigger.key.toRegex().containsMatchIn(content.toLowerCase())) {
                             println("Trigger found in message: $content Author: ${msg.author.name} (${msg.author.id})")
                             trigger.value(msg)
+                            break
                         }
                     }
                 }

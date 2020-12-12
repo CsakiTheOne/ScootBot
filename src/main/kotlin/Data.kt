@@ -5,8 +5,9 @@ import java.io.File
 import java.lang.Exception
 
 class Data() {
-    var trustedGuilds = mutableListOf<String>()
-    var clickerMessageIds = mutableListOf<String>()
+    var guestbook = mutableSetOf<String>()
+    var trustedGuilds = mutableSetOf<String>()
+    var clickerMessageIds = mutableSetOf<String>()
     var stat = mutableMapOf<String, Int>()
 
     fun addStat(name: String, value: Int = 1) {
