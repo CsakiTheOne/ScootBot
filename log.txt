@@ -12,3 +12,21 @@
 2020. 12. 347. 18:39.48 [MAIN]: ----- BOT STARTED -----
 2020. 12. 347. 18:40.11 [BOT]: Command received: .poll Ez a parancs működik?; Igen; Nem; Yeet Author: CsakiTheOne (259610472729280513)
 2020. 12. 347. 18:40.11 [BOT]: Trigger found in message: .poll Ez a parancs működik?; Igen; Nem; Yeet Author: CsakiTheOne (259610472729280513)
+2020. 12. 347. 19:31.05 [MAIN]: ----- BOT STARTED -----
+2020. 12. 347. 19:32.13 [MAIN]: ----- BOT STARTED -----
+2020. 12. 347. 19:33.50 [MAIN]: ----- BOT STARTED -----
+2020. 12. 347. 19:53.29 [MAIN]: ----- BOT STARTED -----
+2020. 12. 347. 19:54.35 [BOT]: Command received: .poll Elnézést, maga ön?; 🤩 Igen; 😳 Nem Author: CsakiTheOne (259610472729280513)
+2020. 12. 347. 20:01.33 [MAIN]: ----- BOT STARTED -----
+2020. 12. 347. 20:01.45 [BOT]: Command received: .poll Author: CsakiTheOne (259610472729280513)
+2020. 12. 347. 20:03.06 [BOT]: Command received: .stat Author: CsakiTheOne (259610472729280513)
+2020. 12. 347. 20:18.15 [BOT]: Private message from CsakiTheOne: Hali!
+2020. 12. 347. 20:18.25 [BOT]: Private message from CsakiTheOne: Hali!
+2020. 12. 347. 20:18.31 [BOT]: Private message from CsakiTheOne: .mondd Szia!
+2020. 12. 347. 20:18.31 [BOT]: Command received: .mondd Szia! Author: CsakiTheOne (259610472729280513)
+2020. 12. 347. 20:19.11 [BOT]: Private message from CsakiTheOne: .help
+2020. 12. 347. 20:19.11 [BOT]: Command received: .help Author: CsakiTheOne (259610472729280513)
+2020. 12. 347. 20:19.11 [BOT]: Private message from Gombóc: 
+2020. 12. 347. 20:19.17 [BOT]: Private message from CsakiTheOne: .mondd Hmm...
+2020. 12. 347. 20:19.17 [BOT]: Command received: .mondd Hmm... Author: CsakiTheOne (259610472729280513)
+2020. 12. 347. 20:20.14 [BOT]: Command received: .szegz <@460063154638946305> Author: CsakiTheOne (259610472729280513)

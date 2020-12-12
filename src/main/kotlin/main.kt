@@ -85,24 +85,30 @@ fun setBasicCommands() {
     }
 
     bot.commands["poll"] = {
-        val params = it.contentRaw.removePrefix(".poll ").split(';').map { r -> r.trim() }
-        var options = ""
-        for (i in 1 until params.size) {
-            options += ":regional_indicator_${'a' - 1 + i}: ${params[i]}\n"
+        if (it.contentRaw == ".poll") {
+            it.channel.sendMessage(
+                "Szavazás használata: `.poll <kérdés>; <emoji> <válasz>; <emoji2> <válasz2>`\n" +
+                    "Például: `.poll Hogy vagy?; 👍 Jól!; 👎 Nem a legjobb.`"
+            ).queue()
         }
-        it.channel.sendMessage(
-            EmbedBuilder()
-                .setTitle(params[0])
-                .setDescription(options)
-                .build()
-        ).queue { poll ->
+        else {
+            val params = it.contentRaw.removePrefix(".poll ").split(';').map { r -> r.trim() }
+            var options = ""
             for (i in 1 until params.size) {
-                poll.addReaction(
-                    poll.guild.getEmotesByName(":regional_indicator_${'a' - 1 + i}:", true)[0]
-                ).queue()
+                options += "${params[i]}\n"
             }
-
+            it.channel.sendMessage(
+                EmbedBuilder()
+                    .setTitle(params[0])
+                    .setDescription(options)
+                    .build()
+            ).queue { poll ->
+                for (i in 1 until params.size) {
+                    poll.addReaction(params[i].split(' ')[0]).queue()
+                }
+            }
         }
+
     }
 
     bot.commands["stat reset"] = {
