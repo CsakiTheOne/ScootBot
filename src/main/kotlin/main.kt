@@ -15,6 +15,7 @@ lateinit var bot: Bot
 fun main() {
     data = Data.load()
     bot = Bot(Secret.getToken("start"))
+    Data.log("Main", "----- BOT STARTED -----")
 
     setAdminCommands()
     setBasicCommands()
@@ -48,8 +49,8 @@ fun setAdminCommands() {
         println(it.author.asTag)
     }
 
-    bot.adminCommands["print"] = {
-        println(it.contentRaw)
+    bot.adminCommands["log"] = {
+        Data.log("Admin", it.contentRaw.removePrefix(".log "))
     }
 }
 
@@ -75,7 +76,33 @@ fun setBasicCommands() {
     }
 
     bot.commands["mondd"] = {
-        it.channel.sendMessage("*${it.contentRaw.removePrefix(".mondd ")}*").queue()
+        if (data.trustedGuilds.contains(it.guild)) {
+            it.channel.sendMessage(it.contentRaw.removePrefix(".mondd ")).queue()
+        }
+        else {
+            it.channel.sendMessage("*${it.contentRaw.removePrefix(".mondd ")}*").queue()
+        }
+    }
+
+    bot.commands["poll"] = {
+        val params = it.contentRaw.removePrefix(".poll ").split(';').map { r -> r.trim() }
+        var options = ""
+        for (i in 1 until params.size) {
+            options += ":regional_indicator_${'a' - 1 + i}: ${params[i]}\n"
+        }
+        it.channel.sendMessage(
+            EmbedBuilder()
+                .setTitle(params[0])
+                .setDescription(options)
+                .build()
+        ).queue { poll ->
+            for (i in 1 until params.size) {
+                poll.addReaction(
+                    poll.guild.getEmotesByName(":regional_indicator_${'a' - 1 + i}:", true)[0]
+                ).queue()
+            }
+
+        }
     }
 
     bot.commands["stat reset"] = {
@@ -103,11 +130,7 @@ fun setBasicCommands() {
                 .setTitle("Brainfuck")
                 .setDescription(
                     "Bemenet:\n`${it.contentRaw.split(' ')[1]}`\nKimenet:\n`${
-                        Brainfuck.run(
-                            it.contentRaw.split(
-                                ' '
-                            )[1]
-                        )
+                        Brainfuck.run(it.contentRaw.split(' ')[1])
                     }`"
                 )
                 .build()

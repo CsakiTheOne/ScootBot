@@ -3,6 +3,10 @@ import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Message
 import java.io.File
 import java.lang.Exception
+import java.sql.Time
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.*
 
 class Data() {
     var guestbook = mutableSetOf<String>()
@@ -22,6 +26,10 @@ class Data() {
     }
 
     companion object {
+        fun log(sender: String, message: String) {
+            File("./log.txt").appendText("${LocalDateTime.now().format(DateTimeFormatter.ofPattern("YYYY. MM. DD. HH:mm.ss"))} [${sender.toUpperCase()}]: $message\n")
+        }
+
         fun load() : Data {
             try {
                 val gson = Gson()

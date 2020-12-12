@@ -29,13 +29,13 @@ class Bot(token: String) {
                     val msg = event.message
                     val content = msg.contentRaw.replace("<@!", "<@")
                     if (!msg.isFromGuild) {
-                        println("Private message from ${msg.author.name}: $content")
+                        Data.log("Bot", "Private message from ${msg.author.name}: $content")
                     }
                     for (aCommand in adminCommands) {
                         if (msg.author.id != "259610472729280513") return
                         if (content.startsWith(prefix + aCommand.key) ||
                             content.startsWith(self.asMention + " " + aCommand.key)) {
-                            println("Admin command received: $content Author: ${msg.author.name} (${msg.author.id})")
+                            Data.log("Bot", "Admin command received: $content Author: ${msg.author.name} (${msg.author.id})")
                             aCommand.value(msg)
                             msg.delete().queue()
                             break
@@ -44,7 +44,7 @@ class Bot(token: String) {
                     for (command in commands) {
                         if (content.startsWith(prefix + command.key) ||
                             content.startsWith(self.asMention + " " + command.key)) {
-                            println("Command received: $content Author: ${msg.author.name} (${msg.author.id})")
+                            Data.log("Bot", "Command received: $content Author: ${msg.author.name} (${msg.author.id})")
                             command.value(msg)
                             msg.delete().queue()
                             break
@@ -52,7 +52,7 @@ class Bot(token: String) {
                     }
                     for (trigger in triggers) {
                         if (trigger.key.toRegex().containsMatchIn(content.toLowerCase())) {
-                            println("Trigger found in message: $content Author: ${msg.author.name} (${msg.author.id})")
+                            Data.log("Bot", "Trigger found in message: $content Author: ${msg.author.name} (${msg.author.id})")
                             trigger.value(msg)
                             break
                         }
@@ -70,8 +70,4 @@ class Bot(token: String) {
     }
 
     fun getSelf() = self
-
-    fun getEmote(guild: Guild, name: String) : Emote {
-        return guild.emotes.first { it.name == name }
-    }
 }

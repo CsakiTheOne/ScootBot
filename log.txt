@@ -1,0 +1,14 @@
+2020. 12. 347. 17:46.26 [MAIN]: ----- BOT STARTED -----
+2020. 12. 347. 17:46.40 [MAIN]: ----- BOT STARTED -----
+2020. 12. 347. 17:46.51 [BOT]: Admin command received: .log Napló teszt Author: CsakiTheOne (259610472729280513)
+2020. 12. 347. 17:46.51 [ADMIN]: Napló teszt
+2020. 12. 347. 17:49.07 [BOT]: Command received: .adventure Author: CsakiTheOne (259610472729280513)
+2020. 12. 347. 17:49.18 [BOT]: Admin command received: .guild trust Author: CsakiTheOne (259610472729280513)
+2020. 12. 347. 17:49.22 [BOT]: Command received: .adventure Author: CsakiTheOne (259610472729280513)
+2020. 12. 347. 18:01.02 [BOT]: Command received: .vendégkönyv felír Author: CsakiTheOne (259610472729280513)
+2020. 12. 347. 18:38.15 [MAIN]: ----- BOT STARTED -----
+2020. 12. 347. 18:38.32 [BOT]: Command received: .poll Ez a parancs működik?; Igen; Nem; Yeet Author: CsakiTheOne (259610472729280513)
+2020. 12. 347. 18:38.32 [BOT]: Trigger found in message: .poll Ez a parancs működik?; Igen; Nem; Yeet Author: CsakiTheOne (259610472729280513)
+2020. 12. 347. 18:39.48 [MAIN]: ----- BOT STARTED -----
+2020. 12. 347. 18:40.11 [BOT]: Command received: .poll Ez a parancs működik?; Igen; Nem; Yeet Author: CsakiTheOne (259610472729280513)
+2020. 12. 347. 18:40.11 [BOT]: Trigger found in message: .poll Ez a parancs működik?; Igen; Nem; Yeet Author: CsakiTheOne (259610472729280513)
