@@ -32,9 +32,9 @@ class Bot(token: String) {
                         Data.log("Bot", "Private message from ${msg.author.name}: $content")
                     }
                     for (aCommand in adminCommands) {
-                        if (msg.author.id != "259610472729280513") return
                         if (content.startsWith(prefix + aCommand.key) ||
                             content.startsWith(self.asMention + " " + aCommand.key)) {
+                            if (msg.author.id != "259610472729280513") break
                             Data.log("Bot", "Admin command received: $content Author: ${msg.author.name} (${msg.author.id})")
                             aCommand.value(msg)
                             msg.delete().queue()
