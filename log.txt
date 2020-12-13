@@ -1,2 +1,1 @@
-2020. 12. 347. 22:44.17 [MAIN]: ----- BOT STARTED -----
-2020. 12. 347. 23:53.53 [BOT]: Command received: .poll Jó lenne Freilit \_\_\_\_\_.; 🎥 Lencsevégre kapni; 😏 Kugivégre rakni; 🥴 Mindkettő Author: CsakiTheOne (259610472729280513)
+2020. 12. 348. 17:10.49 [MAIN]: ----- BOT STARTED -----

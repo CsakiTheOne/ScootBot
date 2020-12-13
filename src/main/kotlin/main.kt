@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Emote
 import net.dv8tion.jda.api.entities.Message
+import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.managers.EmoteManager
 import net.dv8tion.jda.internal.entities.EmoteImpl
 import java.awt.Color
@@ -53,6 +54,19 @@ fun setAdminCommands() {
 
     bot.adminCommands["log"] = {
         Data.log("Admin", it.contentRaw.removePrefix(".log "))
+    }
+
+    bot.adminCommands["clear"] = {
+        val count = it.contentRaw.removePrefix(".clear ").toInt() + 1
+        bot.getSelf().jda.presence.setStatus(OnlineStatus.DO_NOT_DISTURB)
+        it.channel.history.retrievePast(count).queue { msgs ->
+            for (i in 0 until msgs.size) {
+                msgs[i].delete().queue {
+                    println("[CLEAR]: Deleted message ${i - 1}/${msgs.size - 1}")
+                }
+            }
+        }
+        bot.getSelf().jda.presence.setStatus(OnlineStatus.ONLINE)
     }
 }
 
@@ -240,7 +254,7 @@ fun setClickerGame() {
             data.clickerMessageIds.add(clickerMessage.id)
             data.save()
             clickerMessage.addReaction("\uD83D\uDDB1").queue()
-            clickerMessage.addReaction("❌").queue()
+            clickerMessage.makeRemovable()
         }
     }
 

@@ -63,7 +63,7 @@ class Bot(token: String) {
                     if (event.reactionEmote.emoji == "❌") {
                         event.retrieveMessage().queue { msg ->
                             val isRemovable = msg.reactions.any { react ->
-                                react.isSelf && react.reactionEmote.emoji == "❌"
+                                (react.isSelf) && react.reactionEmote.emoji == "❌"
                             }
                             if (isRemovable) msg.delete().queue()
                         }

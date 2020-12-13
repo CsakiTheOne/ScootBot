@@ -1,12 +1,8 @@
 import com.google.gson.Gson
-import net.dv8tion.jda.api.OnlineStatus
-import net.dv8tion.jda.api.entities.Message
 import java.io.File
 import java.lang.Exception
-import java.sql.Time
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.*
 
 class Data() {
     var guestbook = mutableSetOf<String>()
