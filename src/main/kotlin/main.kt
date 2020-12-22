@@ -62,7 +62,7 @@ fun setAdminCommands() {
         it.channel.history.retrievePast(count).queue { msgs ->
             for (i in 0 until msgs.size) {
                 msgs[i].delete().queue {
-                    println("[CLEAR]: Deleted message ${i - 1}/${msgs.size - 1}")
+                    println("[CLEAR]: Deleted message ${i}/${msgs.size - 1}")
                 }
             }
         }
