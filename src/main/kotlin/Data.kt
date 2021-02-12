@@ -1,19 +1,13 @@
 import com.google.gson.Gson
+import extra.NumGuesser
 import java.io.File
 import java.lang.Exception
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 class Data() {
-    var guestbook = mutableSetOf<String>()
-    var trustedGuilds = mutableSetOf<String>()
+    var numGuesserGames = mutableListOf<NumGuesser>()
     var clickerMessageIds = mutableSetOf<String>()
-    var stat = mutableMapOf<String, Int>()
-
-    fun addStat(name: String, value: Int = 1) {
-        stat[name] = (stat[name]?: 0) + value
-        save()
-    }
 
     fun save() {
         val gson = Gson()
@@ -24,6 +18,16 @@ class Data() {
     companion object {
         fun log(sender: String, message: String) {
             File("./log.txt").appendText("${LocalDateTime.now().format(DateTimeFormatter.ofPattern("YYYY. MM. DD. HH:mm.ss"))} [${sender.toUpperCase()}]: $message\n")
+        }
+
+        fun logRead() : String {
+            val logs = File("./log.txt").readLines()
+            val startIndex = if (logs.size < 200) 0 else logs.size - 200
+            return logs.subList(startIndex, logs.size - 1).joinToString("\n")
+        }
+
+        fun logClear() {
+            File("./log.txt").delete()
         }
 
         fun load() : Data {

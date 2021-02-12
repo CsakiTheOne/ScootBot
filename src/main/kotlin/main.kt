@@ -2,58 +2,107 @@ import Bot.Companion.makeRemovable
 import extra.Brainfuck
 import extra.EmojiGame
 import extra.LolChampions
+import extra.NumGuesser
 import extra.adventure.Adventure
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.OnlineStatus
-import net.dv8tion.jda.api.entities.Emote
-import net.dv8tion.jda.api.entities.Message
-import net.dv8tion.jda.api.entities.MessageChannel
-import net.dv8tion.jda.api.managers.EmoteManager
-import net.dv8tion.jda.internal.entities.EmoteImpl
+import net.dv8tion.jda.api.audio.AudioSendHandler
+import net.dv8tion.jda.api.entities.Activity
 import java.awt.Color
+import java.io.File
+import java.net.URI
+import java.nio.ByteBuffer
+import java.util.*
+import javax.script.ScriptEngine
+import javax.script.ScriptEngineManager
+import kotlin.concurrent.timerTask
+import kotlin.math.sin
 
 lateinit var data: Data
 lateinit var bot: Bot
+var autoActivity = true
 
 fun main() {
     data = Data.load()
     bot = Bot(Secret.getToken("start"))
+    Data.logClear()
     Data.log("Main", "----- BOT STARTED -----")
 
     setAdminCommands()
     setBasicCommands()
     setBasicTriggers()
     setClickerGame()
+    setNumGuesserGame()
     setAdventureGame()
+
+    Timer().scheduleAtFixedRate(timerTask {
+        if (!autoActivity) return@timerTask
+        val activities = listOf(
+            Activity.playing("HealTogether"),
+            Activity.playing("Minecraft"),
+            Activity.playing("No Man's Sky"),
+            Activity.playing("Random Bot"),
+            Activity.listening(".help"),
+            Activity.listening("Emerald Hill Zone"),
+            Activity.listening("Fist Bump"),
+            Activity.listening("Lifelight - AmaLee"),
+            Activity.listening("Lindsey Stirling"),
+            Activity.watching("Disenchantment"),
+            Activity.watching("TikTok: @csakivevo"),
+            Activity.watching("Unusual Memes"),
+        )
+        bot.getSelf().jda.presence.activity = activities.random()
+        Data.log("Activity manager", bot.getSelf().jda.presence.activity.toString())
+    }, 3000L, 1000 * 60 * 5)
 }
 
 fun setAdminCommands() {
     bot.adminCommands["idle toggle"] = {
         bot.getSelf().jda.presence.setStatus(
-            if (bot.getSelf().jda.presence.status == OnlineStatus.IDLE) OnlineStatus.ONLINE
+            if (bot.getSelf().jda.presence.status != OnlineStatus.ONLINE) OnlineStatus.ONLINE
             else OnlineStatus.IDLE
         )
         println("Status set to ${bot.getSelf().jda.presence.status.name}")
     }
 
-    bot.adminCommands["guild trust"] = {
-        data.trustedGuilds.add(it.guild.id)
-        data.save()
-        it.channel.sendMessage("Ez jó helynek tűnik, bízok bennetek. :relieved: :heart:").queue { msg -> msg.makeRemovable() }
+    bot.adminCommands["stop"] = {
+        bot.getSelf().jda.presence.setStatus(OnlineStatus.OFFLINE)
+        println("Status set to ${bot.getSelf().jda.presence.status.name}")
     }
 
-    bot.adminCommands["guild danger"] = {
-        data.trustedGuilds.remove(it.guild.id)
-        data.save()
-    }
-
-    bot.adminCommands["debug"] = {
-        println(it.author.name)
-        println(it.author.asTag)
+    bot.adminCommands["log read"] = {
+        it.channel.sendMessage("```\n" + Data.logRead() + "\n```").queue { msg -> msg.makeRemovable() }
     }
 
     bot.adminCommands["log"] = {
         Data.log("Admin", it.contentRaw.removePrefix(".log "))
+    }
+
+    bot.adminCommands["activity"] = {
+        if (it.contentRaw.contains("auto")) {
+            autoActivity = true
+        }
+        else {
+            autoActivity = false
+            val activityType = it.contentRaw.removePrefix(".activity ").split(' ')[0]
+            bot.getSelf().jda.presence.activity = when (activityType) {
+                "play" -> Activity.playing(it.contentRaw.substring(15))
+                "watch" -> Activity.watching(it.contentRaw.substring(16))
+                "stream" -> Activity.streaming(it.contentRaw.substring(17), it.contentRaw.substringAfter("URL="))
+                "listen" -> Activity.listening(it.contentRaw.substring(17))
+                else -> Activity.playing(it.contentRaw.substring(10))
+            }
+        }
+    }
+
+    bot.adminCommands["wake"] = {
+        it.guild.loadMembers().onSuccess { members ->
+            val offlines = members.filter { m -> m.onlineStatus == OnlineStatus.OFFLINE }
+            val mentions = offlines.joinToString(" ") { m -> m.asMention }
+            it.channel.sendMessage("${members.size - offlines.size}/${members.size}\n$mentions").queue { msg -> msg.makeRemovable() }
+        }.onError { _ ->
+            it.channel.sendMessage("Nem tudom fölkelteni a szervert.").queue { msg -> msg.makeRemovable() }
+        }
     }
 
     bot.adminCommands["clear"] = {
@@ -72,11 +121,11 @@ fun setAdminCommands() {
 
 fun setBasicCommands() {
     bot.commands["help"] = {
-        val helpMessage = "Parancsok (mindegyik elé `${bot.prefix}`):\n" +
+        val helpMessage = "**Parancsok (mindegyik elé `${bot.prefix}` vagy szólítsd meg Gombócot):**\n" +
                 bot.commands.keys.joinToString() +
-                "\n\nKifejezések, amikre reagálok:\n" +
+                "\n\n**Kifejezések, amikre reagálok (regex):**\n" +
                 bot.triggers.keys.joinToString().replace(".*", "\\*").replace("|", "/") +
-                "\n\nHa idle vagyok, akkor épp dolgoznak a kódomon és nem biztos, hogy mindenre reagálni fogok."
+                "\n\nTöbb infó a regex-ről: <https://en.wikipedia.org/wiki/Regular_expression>"
         it.channel.sendMessage(
             EmbedBuilder()
                 .setColor(Color(0, 128, 255))
@@ -88,11 +137,31 @@ fun setBasicCommands() {
 
     bot.commands["ping"] = {
         it.channel.sendMessage(":ping_pong:").queue()
-        data.addStat("Ping")
+    }
+
+    bot.commands["matek"] = {
+        if (it.contentRaw == ".matek") {
+            it.channel.sendMessage("Így használd a parancsot: `.matek <művelet>`\nPéldául: `.matek 2 + 2`")
+                .queue { msg -> msg.makeRemovable() }
+        }
+        else {
+            val jsMathMap = hashMapOf(
+                "sin" to "Math.sin", "cos" to "Math.cos", "tan" to "Math.tan", "pi" to "Math.PI", "sqrt" to "Math.sqrt",
+                "random" to "Math.random()", "rdm" to "Math.random()", "pow" to "Math.pow"
+            )
+            val engine: ScriptEngine = ScriptEngineManager().getEngineByName("JavaScript")
+            val inputRaw = it.contentRaw.removePrefix(".matek ")
+            var input = it.contentRaw.removePrefix(".matek ")
+            for (pair in jsMathMap) {
+                input = input.replace(pair.key, pair.value)
+            }
+            val ans = engine.eval(input) as Number
+            it.channel.sendMessage("$inputRaw = $ans").queue { msg -> msg.makeRemovable() }
+        }
     }
 
     bot.commands["mondd"] = {
-        if (data.trustedGuilds.contains(it.guild)) {
+        if (it.author.id == "259610472729280513") {
             it.channel.sendMessage(it.contentRaw.removePrefix(".mondd ")).queue()
         }
         else {
@@ -100,15 +169,15 @@ fun setBasicCommands() {
         }
     }
 
-    bot.commands["poll"] = {
-        if (it.contentRaw == ".poll") {
+    bot.commands["szavazás"] = {
+        if (it.contentRaw == ".szavazás") {
             it.channel.sendMessage(
-                "Szavazás használata: `.poll <kérdés>; <emoji> <válasz>; <emoji2> <válasz2>`\n" +
-                    "Például: `.poll Hogy vagy?; 👍 Jól!; 👎 Nem a legjobb.`"
-            ).queue()
+                "Szavazás használata: `.szavazás <kérdés>; <emoji> <válasz>; <emoji2> <válasz2>`\n" +
+                    "Például: `.szavazás Hogy vagy?; 👍 Jól!; 👎 Nem a legjobb.`"
+            ).queue { msg -> msg.makeRemovable() }
         }
         else {
-            val params = it.contentRaw.removePrefix(".poll ").split(';').map { r -> r.trim() }
+            val params = it.contentRaw.removePrefix(".szavazás ").split(';').map { r -> r.trim() }
             var options = ""
             for (i in 1 until params.size) {
                 options += "${params[i]}\n"
@@ -124,26 +193,6 @@ fun setBasicCommands() {
                 }
             }
         }
-
-    }
-
-    bot.commands["stat reset"] = {
-        data.stat = mutableMapOf()
-        data.save()
-    }
-
-    bot.commands["stat"] = {
-        val statMessage = if (data.stat.isNullOrEmpty())
-            "Üres"
-        else
-            data.stat.map { s -> "${s.key}: ${s.value}" }.joinToString("\n")
-        it.channel.sendMessage(
-            EmbedBuilder()
-                .setColor(Color(0, 128, 255))
-                .setTitle("Statisztika")
-                .setDescription(statMessage)
-                .build()
-        ).queue { msg -> msg.makeRemovable() }
     }
 
     bot.commands["brainfuck"] = {
@@ -156,7 +205,7 @@ fun setBasicCommands() {
                     }`"
                 )
                 .build()
-        ).queue()
+        ).queue { msg -> msg.makeRemovable() }
     }
 
     bot.commands["szegz"] = {
@@ -165,7 +214,6 @@ fun setBasicCommands() {
         it.channel.sendMessage("$userFrom megszegzeli őt: $userTo").queue { msg ->
             msg.addReaction(listOf("❤️", "\uD83D\uDE0F", "\uD83D\uDE1C", "\uD83D\uDE2E").random()).queue()
         }
-        data.addStat("Szegz")
     }
 
     bot.commands["lolchamp"] = {
@@ -175,70 +223,114 @@ fun setBasicCommands() {
                 .setTitle(champ)
                 .setDescription("https://na.leagueoflegends.com/en-us/champions/${champ.toLowerCase()}/")
                 .build()
-        ).queue()
-    }
-
-    bot.commands["emojigame"] = {
-        it.channel.sendMessage(EmojiGame.generate()).queue()
-        data.addStat("Emoji játék")
-    }
-
-    bot.commands["vendégkönyv felír"] = {
-        data.guestbook.add(it.author.asTag)
-        data.stat["Vendégkönyv"] = data.guestbook.size
-        data.save()
-        it.channel.sendMessage("Felírtalak a vendégkönyvbe! :book::pen_ballpoint:").queue { msg -> msg.makeRemovable() }
-    }
-
-    bot.commands["vendégkönyv töröl"] = {
-        data.guestbook.remove(it.author.asTag)
-        data.stat["Vendégkönyv"] = data.guestbook.size
-        data.save()
-        it.channel.sendMessage("Töröltelek a vendégkönyvből").queue { msg -> msg.makeRemovable() }
-    }
-
-    bot.commands["vendégkönyv"] = {
-        it.channel.sendMessage(
-            EmbedBuilder()
-                .setColor(Color(0, 128, 255))
-                .setTitle("Vendégkönyv")
-                .setDescription(data.guestbook.joinToString())
-                .build()
         ).queue { msg -> msg.makeRemovable() }
+    }
+
+    bot.commands["insta"] = {
+        it.channel.sendMessage("Az instám: @csicskagombocek").queue { msg -> msg.makeRemovable() }
+    }
+
+    bot.commands["fejlesztő"] = {
+        it.channel.sendMessage("A készítőm: **@CsakiTheOne#8589** De sokan segítettek jobbá válni ❤").queue()
+    }
+
+    bot.commands["emoji kvíz"] = {
+        val questions = mapOf(
+            "Közmondás: 👀🐮🆕🚪" to "Néz, mint borjú az új kapura.", "Közmondás: 🧠⚖💪" to "Többet ésszel, mint erővel.",
+            "Közmondás: ❌🏡😺🎼🐭🐭" to "Ha nincs otthon a macska, cincognak az egerek.",
+            "Közmondás: ❌👀🌳(🌳🌲🌳🌲)" to "Nem látja a fától az erdőt.", "Közmondás: ⌛🔜🌹" to "Türelem rózsát terem",
+            "Film: 🧒👴🚗⌚" to "Vissza a jövőbe", "Film: 🏰👧👧❄⛄" to "Jégvarázs", "Film: 👨👨⚫👽" to "Man In Black",
+            "Film: 🕷👦" to "Pókember", "Film: 🐢🐁👊🍕" to "Tininindzsa teknőcök", "Film: 👦😡💪🟢" to "Hulk",
+            "Film: 👧▶🐇⏱🚪 🎩☕ 👑♥👧" to "Alíz Csodaországban", "Film: 👧🦁🌹" to "Szépség és a szörnyeteg",
+            "Film: ☠🔴🛁" to "Deadpool", "Film: 🗽🦁🦒🦓🦛🚢🏝" to "Madagaszkár", "Film: 🐁🥄🍲" to "L'ecsó",
+            "Márka: 💻📱🍎" to "Apple", "Márka: 👟✔" to "Nike", "Márka: ⭕x5🚗" to "Audi"
+        )
+
+        fun sendEmojiQuiz() {
+            var question = questions.keys.random()
+            it.channel.sendMessage("$question\n🔃: másik kvíz ❓: megoldás ▶: következő").queue { msg ->
+                msg.addReaction("🔃").queue()
+                msg.addReaction("❓").queue()
+                msg.addReaction("▶").queue()
+                bot.reactionListeners.add { event ->
+                    if (event.messageId == msg.id) {
+                        when (event.reactionEmote.emoji) {
+                            "🔃" -> {
+                                question = questions.keys.random()
+                                msg.editMessage(question).queue()
+                            }
+                            "❓" -> msg.editMessage(question + "\nMegoldás: ||" + questions[question] + "||").queue()
+                            "▶" -> {
+                                sendEmojiQuiz()
+                                msg.removeReaction("▶", bot.getSelf()).queue()
+                            }
+                        }
+                        msg.removeReaction(event.reactionEmote.emoji, event.user!!).queue()
+                    }
+                }
+            }
+        }
+
+        if (it.contentRaw.contains("méret")) {
+            it.channel.sendMessage("${questions.size}db emoji kvízem van.").queue()
+        }
+        else if (it.contentRaw.contains("debug")) {
+            it.channel.sendMessage(questions.keys.joinToString("\n")).queue()
+        }
+        else {
+            sendEmojiQuiz()
+        }
+    }
+
+    bot.commands["emoji ember"] = {
+        it.channel.sendMessage(EmojiGame.generate()).queue()
     }
 }
 
 fun setBasicTriggers() {
-    bot.triggers["kő|papír|olló"] = {
-        val answers = listOf("Kő", "Papír", "Olló")
-        it.channel.sendMessage(answers.random()).queue()
-        data.addStat("Kő papír olló")
+    bot.triggers["""((szia|helló|hali|csá|cső|hey|henlo) gombóc!*)|sziaszto+k.*"""] = {
+        val greetings = listOf("Szia!", "Hali!", "Henlo!", "Hey!", "Heyho!")
+        it.channel.sendMessage(greetings.random()).queue()
     }
 
-    bot.triggers["🪨|🧻|✂️"] = {
-        val answers = listOf(":rock:", ":roll_of_paper:", ":scissors:")
+    bot.triggers["""hogy vagytok.*?|hogy vagy gombóc?"""]
+
+    bot.triggers[""".*((letölt.*minecraft)|(minecraft.*letölt)).*\?.*"""] = {
+        it.channel.sendMessage("A Minecraft-ot innen ajánlom letölteni:\nhttps://tlauncher.org/en/")
+            .queue { msg -> msg.makeRemovable() }
+    }
+
+    bot.triggers["kő|papír|olló|\uD83E\uDEA8|\uD83E\uDDFB|✂️"] = {
+        val answers = listOf("Kő", "Papír", "Olló")
         it.channel.sendMessage(answers.random()).queue()
-        data.addStat("Kő papír olló")
     }
 
     bot.triggers[".*szeret.*"] = {
         it.addReaction("❤️").queue()
-        data.addStat("Szeretet")
     }
 
     bot.triggers[".*yeet.*"] = {
         it.addReaction("\uD83D\uDCA8").queue()
-        data.addStat("Yeet")
     }
 
-    bot.triggers[".*vices.*"] = {
+    bot.triggers[".*(tec+el|tetszel).*"] = {
+        it.addReaction("❤️").queue()
+        val ans = listOf("Te is!", "Te is nekem!")
+        it.channel.sendMessage(ans.random()).queue()
+    }
+
+    bot.triggers[""".*\b(vic+es.|retar).*"""] = {
         it.addReaction("\uD83D\uDE02").queue()
-        data.addStat("Vices")
     }
 
-    bot.triggers[".*sziasztok.*"] = {
-        val greetings = listOf("Szia!", "Hali!", "Henlo!", "Hey!")
+    bot.triggers["""jó {0,1}éj.*"""] = {
+        it.addReaction("🌙").queue()
+        val greetings = listOf("Aludj jól!", "Álmodj szépeket!", "Jó éjt!", "Jó éjszakát!", "Pihend ki magad!")
         it.channel.sendMessage(greetings.random()).queue()
+    }
+
+    bot.triggers[""".*\b(baszdmeg|bazdmeg|fasz|gec|geci|kurva|fuck|rohadj|@everyone).*"""] = {
+        it.addReaction("😠").queue()
     }
 }
 
@@ -278,20 +370,48 @@ fun setClickerGame() {
                     .build()
             ).queue { _ ->
                 it.reaction.removeReaction(it.user!!).queue()
-                data.addStat("Click")
+            }
+        }
+    }
+}
+
+fun setNumGuesserGame() {
+    bot.commands["számkitaláló"] = {
+        val max = if (it.contentRaw.contains(" ")) it.contentRaw.split(" ")[1].toInt() else 100
+        it.channel.sendMessage("Gondoltam egy számra 0 és $max között.\nTippelj: `.tipp <szám>`").queue { msg ->
+            data.numGuesserGames.add(NumGuesser(it.guild.id, msg.id, (0..max).random()))
+        }
+    }
+
+    bot.commands["tipp"] = {
+        val x = it.contentRaw.removePrefix(".tipp ").toInt()
+        val numGuesser = data.numGuesserGames.first { ng -> ng.guildId == it.guild.id }
+        when {
+            x > numGuesser.num -> {
+                it.channel.retrieveMessageById(numGuesser.messageId).queue { msg ->
+                    it.channel.editMessageById(numGuesser.messageId, "${msg.contentRaw}\n$x: A gondolt szám kisebb.").queue()
+                }
+            }
+            x < numGuesser.num -> {
+                it.channel.retrieveMessageById(numGuesser.messageId).queue { msg ->
+                    it.channel.editMessageById(numGuesser.messageId, "${msg.contentRaw}\n$x: A gondolt szám nagyobb.").queue()
+                }
+            }
+            x == numGuesser.num -> {
+                it.channel.retrieveMessageById(numGuesser.messageId).queue { msg ->
+                    it.channel.editMessageById(numGuesser.messageId, "${msg.contentRaw}\n$x: ${it.author.name} eltalálta! 🎉").queue {
+                        msg.makeRemovable()
+                        data.numGuesserGames.remove(numGuesser)
+                    }
+                }
             }
         }
     }
 }
 
 fun setAdventureGame() {
-    bot.commands["adventure"] = {
-        if (data.trustedGuilds.contains(it.guild.id)) {
-            Adventure.startNew(data, it)
-        }
-        else {
-            it.channel.sendMessage("Ezen a szerveren nem működik a kaland játék.").queue()
-        }
+    bot.adminCommands["adventure"] = {
+        Adventure.startNew(data, it)
     }
 
     bot.reactionListeners.add {

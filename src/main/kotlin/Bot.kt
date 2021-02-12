@@ -18,6 +18,8 @@ class Bot(token: String) {
 
     init {
         val gatewayIntents = GatewayIntent.getIntents(GatewayIntent.DEFAULT)
+        gatewayIntents.add(GatewayIntent.GUILD_MEMBERS)
+        gatewayIntents.add(GatewayIntent.GUILD_PRESENCES)
         gatewayIntents.add(GatewayIntent.DIRECT_MESSAGE_REACTIONS)
         gatewayIntents.add(GatewayIntent.GUILD_MESSAGE_REACTIONS)
         JDABuilder.create(token, gatewayIntents)
@@ -27,13 +29,13 @@ class Bot(token: String) {
                 }
                 override fun onMessageReceived(event: MessageReceivedEvent) {
                     val msg = event.message
-                    val content = msg.contentRaw.replace("<@!", "<@")
+                    val content = msg.contentRaw.replace("<@!", "<@").replace(self.asMention + " ", ".")
+                    if (msg.author.isBot) return
                     if (!msg.isFromGuild) {
                         Data.log("Bot", "Private message from ${msg.author.name}: $content")
                     }
                     for (aCommand in adminCommands) {
-                        if (content.startsWith(prefix + aCommand.key) ||
-                            content.startsWith(self.asMention + " " + aCommand.key)) {
+                        if (content.startsWith(prefix + aCommand.key)) {
                             if (msg.author.id != "259610472729280513") break
                             Data.log("Bot", "Admin command received: $content Author: ${msg.author.name} (${msg.author.id})")
                             aCommand.value(msg)
@@ -42,8 +44,7 @@ class Bot(token: String) {
                         }
                     }
                     for (command in commands) {
-                        if (content.startsWith(prefix + command.key) ||
-                            content.startsWith(self.asMention + " " + command.key)) {
+                        if (content.startsWith(prefix + command.key)) {
                             Data.log("Bot", "Command received: $content Author: ${msg.author.name} (${msg.author.id})")
                             command.value(msg)
                             msg.delete().queue()
@@ -51,7 +52,7 @@ class Bot(token: String) {
                         }
                     }
                     for (trigger in triggers) {
-                        if (trigger.key.toRegex().matches(content.toLowerCase())) {
+                        if (trigger.key.simplify().toRegex().matches(content.simplify())) {
                             Data.log("Bot", "Trigger found in message: $content Author: ${msg.author.name} (${msg.author.id})")
                             trigger.value(msg)
                             break
@@ -60,6 +61,7 @@ class Bot(token: String) {
                 }
                 override fun onMessageReactionAdd(event: MessageReactionAddEvent) {
                     if (event.user?.isBot == true) return
+                    Data.log("MessageReactionListener", event.reactionEmote.emoji)
                     if (event.reactionEmote.emoji == "❌") {
                         event.retrieveMessage().queue { msg ->
                             val isRemovable = msg.reactions.any { react ->
@@ -68,12 +70,16 @@ class Bot(token: String) {
                             if (isRemovable) msg.delete().queue()
                         }
                     }
+                    else if (event.reactionEmote.emoji == "\uD83D\uDC94") {
+                        event.retrieveMessage().queue { msg ->
+                            msg.removeReaction("❤️", self).queue()
+                        }
+                    }
                     for (reactionListener in reactionListeners) {
                         reactionListener(event)
                     }
                 }
             })
-            .setActivity(Activity.listening("you ❤"))
             .build()
     }
 
@@ -82,6 +88,13 @@ class Bot(token: String) {
     companion object {
         fun Message?.makeRemovable(callback: (() -> Unit)? = null) {
             this?.addReaction("❌")?.queue { callback?.invoke() }
+        }
+
+        fun String.simplify() : String {
+            return this.toLowerCase().trim().replace("á", "a").replace("e", "é")
+                .replace("í", "i").replace("ó", "o").replace("ö", "o")
+                .replace("ő", "o").replace("ű", "u").replace("ü", "u")
+                .replace("ú", "u")
         }
     }
 }
