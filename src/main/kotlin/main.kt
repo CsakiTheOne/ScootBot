@@ -343,7 +343,7 @@ fun setBasicCommands() {
                     }
                 }
             }
-            it.channel.sendMessage("**Hype!** Reagálj erre az üzenetre! 🎉\n`[${" ".repeat(20)}]`").queue { msg ->
+            it.channel.sendMessage("**Hype!** Reagálj erre az üzenetre! 🎉\n`[       START!       ]`").queue { msg ->
                 listener = bot.addReactionListener { event -> onHypeReact(event, msg) }
             }
             Timer().schedule(timerTask {
