@@ -6,17 +6,14 @@ import extra.NumGuesser
 import extra.adventure.Adventure
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.OnlineStatus
-import net.dv8tion.jda.api.audio.AudioSendHandler
 import net.dv8tion.jda.api.entities.Activity
+import net.dv8tion.jda.api.entities.Message
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent
 import java.awt.Color
-import java.io.File
-import java.net.URI
-import java.nio.ByteBuffer
 import java.util.*
 import javax.script.ScriptEngine
 import javax.script.ScriptEngineManager
 import kotlin.concurrent.timerTask
-import kotlin.math.sin
 
 lateinit var data: Data
 lateinit var bot: Bot
@@ -42,6 +39,7 @@ fun main() {
             Activity.playing("Minecraft"),
             Activity.playing("No Man's Sky"),
             Activity.playing("Random Bot"),
+            Activity.playing("Sonic Mania"),
             Activity.listening(".help"),
             Activity.listening("Emerald Hill Zone"),
             Activity.listening("Fist Bump"),
@@ -290,9 +288,15 @@ fun setBasicCommands() {
                                 question = questions.keys.random()
                                 msg.editMessage(question).queue()
                             }
-                            "❓" -> msg.editMessage(question + "\nMegoldás: ||" + questions[question] + "||").queue()
+                            "❓" -> {
+                                msg.editMessage(question + "\nMegoldás: ||" + questions[question] + "||").queue()
+                                msg.removeReaction("🔃", bot.getSelf()).queue()
+                                msg.removeReaction("❓", bot.getSelf()).queue()
+                            }
                             "▶" -> {
                                 sendEmojiQuiz()
+                                msg.removeReaction("🔃", bot.getSelf()).queue()
+                                msg.removeReaction("❓", bot.getSelf()).queue()
                                 msg.removeReaction("▶", bot.getSelf()).queue()
                             }
                         }
@@ -315,6 +319,38 @@ fun setBasicCommands() {
 
     bot.commands["emoji ember"] = {
         it.channel.sendMessage(EmojiGame.generate()).queue()
+    }
+
+    bot.commands["hype"] = {
+        if (it.contentRaw == ".hype") {
+            it.channel.sendMessage("A parancs használata: `.hype <szám>`").queue { msg -> msg.makeRemovable() }
+        }
+        else {
+            lateinit var listener: (e: MessageReactionAddEvent) -> Unit
+            val max = it.contentRaw.removePrefix(".hype ").toInt()
+            fun onHypeReact(event: MessageReactionAddEvent, msg: Message) {
+                if (event.messageId != msg.id) return
+                event.retrieveMessage().queue { rmsg ->
+                    val n = rmsg.reactions.map { r -> r.count }.sum() + rmsg.emotes.size
+                    var percent = (n / max.toFloat() * 100f).toInt()
+                    val percentNoLimit = percent
+                    if (percent >= 100) percent = 100
+                    if (percent < 100) {
+                        rmsg.editMessage("**Hype!** $n/$max Reagálj erre az üzenetre! 🎉\n`[${"=".repeat(percent * 20 / 100)}${" ".repeat(20 - (percent * 20 / 100))}]` $percentNoLimit%").queue()
+                    }
+                    else {
+                        rmsg.editMessage("**Hype!** $n/$max\n$percentNoLimit% 🎉").queue()
+                    }
+                }
+            }
+            it.channel.sendMessage("**Hype!** Reagálj erre az üzenetre! 🎉\n`[${" ".repeat(20)}]`").queue { msg ->
+                listener = bot.addReactionListener { event -> onHypeReact(event, msg) }
+            }
+            Timer().schedule(timerTask {
+                bot.reactionListeners.remove(listener)
+                it.channel.sendMessage("Hype vége! 🎉").queue()
+            }, (max * 10 * 1000).toLong())
+        }
     }
 }
 
@@ -357,6 +393,26 @@ fun setBasicTriggers() {
 
     bot.triggers[""".*\b(baszdmeg|bazdmeg|fasz|gec|geci|kurva|fuck|rohadj|picsa|picsába|rohadék).*"""] = {
         it.addReaction("😠").queue()
+    }
+
+    bot.triggers[".*csáki.*"] = {
+        val guildName = if (it.isFromGuild) "**Szerver:** ${it.guild.name} > ${it.channel.name}" else "**Privát:** ${it.channel.name}"
+        bot.getSelf().jda.getPrivateChannelById("783680267155406868")?.sendMessage(
+            EmbedBuilder()
+                .setTitle("Megemlítettek egy üzenetben")
+                .setDescription("$guildName\n**Üzenet:** ${it.contentRaw}\n**Írta:** ${it.author.asTag}")
+                .build()
+        )?.queue()
+    }
+
+    bot.triggers[".*(bius|anka|bianka).*"] = {
+        val guildName = if (it.isFromGuild) "**Szerver:** ${it.guild.name} > ${it.channel.name}" else "**Privát:** ${it.channel.name}"
+        bot.getSelf().jda.getPrivateChannelById("783680267155406868")?.sendMessage(
+            EmbedBuilder()
+                .setTitle("Megemlítették Biust egy üzenetben")
+                .setDescription("$guildName\n**Üzenet:** ${it.contentRaw}\n**Írta:** ${it.author.asTag}")
+                .build()
+        )?.queue()
     }
 }
 
@@ -442,7 +498,7 @@ fun setAdventureGame() {
 
     bot.reactionListeners.add {
         it.retrieveMessage().queue { msg ->
-            if (msg.embeds[0].title != "Gombóc kaland") return@queue
+            if (msg.embeds.isNullOrEmpty() || msg.embeds[0].title != "Gombóc kaland") return@queue
             Adventure.buttonPressed(data, it, msg)
         }
     }

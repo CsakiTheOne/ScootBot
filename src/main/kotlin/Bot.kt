@@ -32,13 +32,13 @@ class Bot(token: String) {
                     val content = msg.contentRaw.replace("<@!", "<@").replace(self.asMention + " ", ".")
                     if (msg.author.isBot) return
                     if (!msg.isFromGuild) {
-                        Data.log("Bot", "Private message from ${msg.author.name}: $content")
+                        Data.log("Bot", "Private message from ${msg.author.asTag} (Channel id: ${msg.channel.id}): $content")
                     }
                     for (aCommand in adminCommands) {
                         if (content.startsWith(prefix + aCommand.key)) {
                             // CsakiTheOne, Anka
                             if (msg.author.id != "259610472729280513" && msg.author.id != "427127654735413258") break
-                            Data.log("Bot", "Admin command received: $content Author: ${msg.author.name} (${msg.author.id})")
+                            Data.log("Bot", "Admin command received: $content Author: ${msg.author.asTag} (${msg.author.id})")
                             aCommand.value(msg)
                             msg.delete().queue()
                             break
@@ -46,7 +46,7 @@ class Bot(token: String) {
                     }
                     for (command in commands) {
                         if (content.startsWith(prefix + command.key)) {
-                            Data.log("Bot", "Command received: $content Author: ${msg.author.name} (${msg.author.id})")
+                            Data.log("Bot", "Command received: $content Author: ${msg.author.asTag} (${msg.author.id})")
                             command.value(msg)
                             msg.delete().queue()
                             break
@@ -54,7 +54,7 @@ class Bot(token: String) {
                     }
                     for (trigger in triggers) {
                         if (trigger.key.simplify().toRegex().matches(content.simplify())) {
-                            Data.log("Bot", "Trigger found in message: $content Author: ${msg.author.name} (${msg.author.id})")
+                            Data.log("Bot", "Trigger found in message: $content Author: ${msg.author.asTag} (${msg.author.id})")
                             trigger.value(msg)
                             break
                         }
@@ -62,8 +62,9 @@ class Bot(token: String) {
                 }
                 override fun onMessageReactionAdd(event: MessageReactionAddEvent) {
                     if (event.user?.isBot == true) return
-                    Data.log("MessageReactionListener", event.reactionEmote.emoji)
-                    if (event.reactionEmote.emoji == "❌") {
+                    val emoji = if (event.reactionEmote.isEmoji) event.reactionEmote.emoji else "custom emote"
+                    Data.log("MessageReactionListener", emoji)
+                    if (emoji == "❌") {
                         event.retrieveMessage().queue { msg ->
                             val isRemovable = msg.reactions.any { react ->
                                 (react.isSelf) && react.reactionEmote.emoji == "❌"
@@ -71,7 +72,7 @@ class Bot(token: String) {
                             if (isRemovable) msg.delete().queue()
                         }
                     }
-                    else if (event.reactionEmote.emoji == "\uD83D\uDC94") {
+                    else if (emoji == "\uD83D\uDC94") {
                         event.retrieveMessage().queue { msg ->
                             msg.removeReaction("❤️", self).queue()
                         }
@@ -85,6 +86,11 @@ class Bot(token: String) {
     }
 
     fun getSelf() = self
+
+    fun addReactionListener(listener: (e: MessageReactionAddEvent) -> Unit) : (e: MessageReactionAddEvent) -> Unit {
+        reactionListeners.add(listener)
+        return listener
+    }
 
     companion object {
         fun Message?.makeRemovable(callback: (() -> Unit)? = null) {
