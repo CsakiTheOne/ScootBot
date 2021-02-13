@@ -57,6 +57,18 @@ fun main() {
 }
 
 fun setAdminCommands() {
+    bot.adminCommands["help admin"] = {
+        val helpMessage = "**Parancsok (mindegyik elé `${bot.prefix}` vagy szólítsd meg Gombócot):**\n" +
+                bot.adminCommands.keys.joinToString()
+        it.channel.sendMessage(
+            EmbedBuilder()
+                .setColor(Color(0, 128, 255))
+                .setTitle("Gombóc segítség")
+                .setDescription(helpMessage)
+                .build()
+        ).queue { msg -> msg.makeRemovable() }
+    }
+
     bot.adminCommands["idle toggle"] = {
         bot.getSelf().jda.presence.setStatus(
             if (bot.getSelf().jda.presence.status != OnlineStatus.ONLINE) OnlineStatus.ONLINE
@@ -121,6 +133,18 @@ fun setAdminCommands() {
 
 fun setBasicCommands() {
     bot.commands["help"] = {
+        val helpMessage = "**Parancsok (mindegyik elé `${bot.prefix}` vagy szólítsd meg Gombócot):**\n" +
+                bot.commands.keys.joinToString()
+        it.channel.sendMessage(
+            EmbedBuilder()
+                .setColor(Color(0, 128, 255))
+                .setTitle("Gombóc segítség")
+                .setDescription(helpMessage)
+                .build()
+        ).queue { msg -> msg.makeRemovable() }
+    }
+
+    bot.commands["help all"] = {
         val helpMessage = "**Parancsok (mindegyik elé `${bot.prefix}` vagy szólítsd meg Gombócot):**\n" +
                 bot.commands.keys.joinToString() +
                 "\n\n**Kifejezések, amikre reagálok (regex):**\n" +
@@ -206,6 +230,13 @@ fun setBasicCommands() {
                 )
                 .build()
         ).queue { msg -> msg.makeRemovable() }
+    }
+
+    bot.commands["js"] = {
+        val engine: ScriptEngine = ScriptEngineManager().getEngineByName("JavaScript")
+        val input = it.contentRaw.removePrefix(".js ")
+        val ans = engine.eval(input) as Any
+        it.channel.sendMessage("$input = $ans").queue { msg -> msg.makeRemovable() }
     }
 
     bot.commands["szegz"] = {
@@ -329,7 +360,7 @@ fun setBasicTriggers() {
         it.channel.sendMessage(greetings.random()).queue()
     }
 
-    bot.triggers[""".*\b(baszdmeg|bazdmeg|fasz|gec|geci|kurva|fuck|rohadj|@everyone).*"""] = {
+    bot.triggers[""".*\b(baszdmeg|bazdmeg|fasz|gec|geci|kurva|fuck|rohadj|picsa|picsába|rohadék).*"""] = {
         it.addReaction("😠").queue()
     }
 }

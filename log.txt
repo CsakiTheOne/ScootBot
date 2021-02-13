@@ -1,11 +1,14 @@
-2021. 02. 43. 12:03.47 [MAIN]: ----- BOT STARTED -----
-2021. 02. 43. 12:03.50 [ACTIVITY MANAGER]: Activity(Lindsey Stirling)
-2021. 02. 43. 12:08.50 [ACTIVITY MANAGER]: Activity(TikTok: @csakivevo)
-2021. 02. 43. 12:13.50 [ACTIVITY MANAGER]: Activity(TikTok: @csakivevo)
-2021. 02. 43. 12:18.50 [ACTIVITY MANAGER]: Activity(Emerald Hill Zone)
-2021. 02. 43. 12:23.50 [ACTIVITY MANAGER]: Activity(Lifelight - AmaLee)
-2021. 02. 43. 12:28.50 [ACTIVITY MANAGER]: Activity(Unusual Memes)
-2021. 02. 43. 12:33.50 [ACTIVITY MANAGER]: Activity(Random Bot)
-2021. 02. 43. 12:38.50 [ACTIVITY MANAGER]: Activity(Random Bot)
-2021. 02. 43. 12:39.07 [BOT]: Private message from CsakiTheOne: .stop
-2021. 02. 43. 12:39.07 [BOT]: Admin command received: .stop Author: CsakiTheOne (259610472729280513)
+2021. 02. 43. 21:22.55 [MAIN]: ----- BOT STARTED -----
+2021. 02. 43. 21:22.59 [ACTIVITY MANAGER]: Activity(HealTogether)
+2021. 02. 43. 21:27.59 [ACTIVITY MANAGER]: Activity(Minecraft)
+2021. 02. 43. 21:28.06 [BOT]: Trigger found in message: Sziasztok ❤️ Author: Kis Nóri (691965076948648007)
+2021. 02. 43. 21:32.59 [ACTIVITY MANAGER]: Activity(Lifelight - AmaLee)
+2021. 02. 43. 21:37.59 [ACTIVITY MANAGER]: Activity(Unusual Memes)
+2021. 02. 43. 21:42.59 [ACTIVITY MANAGER]: Activity(Lifelight - AmaLee)
+2021. 02. 43. 21:47.59 [ACTIVITY MANAGER]: Activity(Random Bot)
+2021. 02. 43. 21:52.59 [ACTIVITY MANAGER]: Activity(HealTogether)
+2021. 02. 43. 21:57.59 [ACTIVITY MANAGER]: Activity(Minecraft)
+2021. 02. 43. 22:02.59 [ACTIVITY MANAGER]: Activity(Unusual Memes)
+2021. 02. 43. 22:07.59 [ACTIVITY MANAGER]: Activity(.help)
+2021. 02. 43. 22:10.03 [BOT]: Private message from CsakiTheOne: .stop
+2021. 02. 43. 22:10.03 [BOT]: Admin command received: .stop Author: CsakiTheOne (259610472729280513)
