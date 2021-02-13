@@ -279,10 +279,9 @@ fun setBasicCommands() {
 
         fun sendEmojiQuiz() {
             var question = questions.keys.random()
-            it.channel.sendMessage("$question\n🔃: másik kvíz ❓: megoldás ▶: következő").queue { msg ->
+            it.channel.sendMessage("$question 🔃: volt már ❓: megoldás\nKövetkező: `.emoji kvíz`").queue { msg ->
                 msg.addReaction("🔃").queue()
                 msg.addReaction("❓").queue()
-                msg.addReaction("▶").queue()
                 bot.reactionListeners.add { event ->
                     if (event.messageId == msg.id) {
                         when (event.reactionEmote.emoji) {
@@ -290,10 +289,11 @@ fun setBasicCommands() {
                                 question = questions.keys.random()
                                 msg.editMessage(question).queue()
                             }
-                            "❓" -> msg.editMessage(question + "\nMegoldás: ||" + questions[question] + "||").queue()
-                            "▶" -> {
-                                sendEmojiQuiz()
-                                msg.removeReaction("▶", bot.getSelf()).queue()
+                            "❓" -> {
+                                msg.editMessage(question + "\nMegoldás: ||" + questions[question] + "||\n" +
+                                        "Következő: `.emoji kvíz`").queue()
+                                msg.removeReaction("🔃", bot.getSelf()).queue()
+                                msg.removeReaction("❓", bot.getSelf()).queue()
                             }
                         }
                         msg.removeReaction(event.reactionEmote.emoji, event.user!!).queue()
@@ -319,7 +319,7 @@ fun setBasicCommands() {
 }
 
 fun setBasicTriggers() {
-    bot.triggers["""((szia|helló|hali|csá|cső|hey|henlo) gombóc!*)|sziaszto+k.*"""] = {
+    bot.triggers["""((szia|helló|hali|csá|cső|hey|henlo) gombóc!*)|sziaszto+k.*|gombóc"""] = {
         val greetings = listOf("Szia!", "Hali!", "Henlo!", "Hey!", "Heyho!")
         it.channel.sendMessage(greetings.random()).queue()
     }
