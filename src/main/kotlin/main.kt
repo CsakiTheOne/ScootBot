@@ -122,6 +122,18 @@ fun setAdminCommands() {
 fun setBasicCommands() {
     bot.commands["help"] = {
         val helpMessage = "**Parancsok (mindegyik elé `${bot.prefix}` vagy szólítsd meg Gombócot):**\n" +
+                bot.commands.keys.joinToString()
+        it.channel.sendMessage(
+            EmbedBuilder()
+                .setColor(Color(0, 128, 255))
+                .setTitle("Gombóc segítség")
+                .setDescription(helpMessage)
+                .build()
+        ).queue { msg -> msg.makeRemovable() }
+    }
+
+    bot.commands["help all"] = {
+        val helpMessage = "**Parancsok (mindegyik elé `${bot.prefix}` vagy szólítsd meg Gombócot):**\n" +
                 bot.commands.keys.joinToString() +
                 "\n\n**Kifejezések, amikre reagálok (regex):**\n" +
                 bot.triggers.keys.joinToString().replace(".*", "\\*").replace("|", "/") +
@@ -319,16 +331,11 @@ fun setBasicTriggers() {
         it.channel.sendMessage(ans.random()).queue()
     }
 
-    bot.triggers[""".*\b(vic+es.|retar).*"""] = {
-        it.addReaction("\uD83D\uDE02").queue()
-    }
-
     bot.triggers["""jó {0,1}éj.*"""] = {
-        it.addReaction("🌙").queue()
         val greetings = listOf("Aludj jól!", "Álmodj szépeket!", "Jó éjt!", "Jó éjszakát!", "Pihend ki magad!")
         it.channel.sendMessage(greetings.random()).queue()
     }
-
+    
     bot.triggers[""".*\b(baszdmeg|bazdmeg|fasz|gec|geci|kurva|fuck|rohadj|@everyone).*"""] = {
         it.addReaction("😠").queue()
     }

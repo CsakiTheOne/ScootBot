@@ -1,11 +1,33 @@
-2021. 02. 43. 12:03.47 [MAIN]: ----- BOT STARTED -----
-2021. 02. 43. 12:03.50 [ACTIVITY MANAGER]: Activity(Lindsey Stirling)
-2021. 02. 43. 12:08.50 [ACTIVITY MANAGER]: Activity(TikTok: @csakivevo)
-2021. 02. 43. 12:13.50 [ACTIVITY MANAGER]: Activity(TikTok: @csakivevo)
-2021. 02. 43. 12:18.50 [ACTIVITY MANAGER]: Activity(Emerald Hill Zone)
-2021. 02. 43. 12:23.50 [ACTIVITY MANAGER]: Activity(Lifelight - AmaLee)
-2021. 02. 43. 12:28.50 [ACTIVITY MANAGER]: Activity(Unusual Memes)
-2021. 02. 43. 12:33.50 [ACTIVITY MANAGER]: Activity(Random Bot)
-2021. 02. 43. 12:38.50 [ACTIVITY MANAGER]: Activity(Random Bot)
-2021. 02. 43. 12:39.07 [BOT]: Private message from CsakiTheOne: .stop
-2021. 02. 43. 12:39.07 [BOT]: Admin command received: .stop Author: CsakiTheOne (259610472729280513)
+2021. 02. 44. 09:42.41 [MAIN]: ----- BOT STARTED -----
+2021. 02. 44. 09:42.45 [ACTIVITY MANAGER]: Activity(Lifelight - AmaLee)
+2021. 02. 44. 09:47.44 [ACTIVITY MANAGER]: Activity(Minecraft)
+2021. 02. 44. 09:52.44 [ACTIVITY MANAGER]: Activity(Lifelight - AmaLee)
+2021. 02. 44. 09:57.44 [ACTIVITY MANAGER]: Activity(HealTogether)
+2021. 02. 44. 10:02.44 [ACTIVITY MANAGER]: Activity(.help)
+2021. 02. 44. 10:07.44 [ACTIVITY MANAGER]: Activity(.help)
+2021. 02. 44. 10:12.44 [ACTIVITY MANAGER]: Activity(Lifelight - AmaLee)
+2021. 02. 44. 10:17.44 [ACTIVITY MANAGER]: Activity(TikTok: @csakivevo)
+2021. 02. 44. 10:22.44 [ACTIVITY MANAGER]: Activity(Lindsey Stirling)
+2021. 02. 44. 10:27.44 [ACTIVITY MANAGER]: Activity(.help)
+2021. 02. 44. 10:32.44 [ACTIVITY MANAGER]: Activity(TikTok: @csakivevo)
+2021. 02. 44. 10:33.59 [MESSAGEREACTIONLISTENER]: 😂
+2021. 02. 44. 10:37.04 [MESSAGEREACTIONLISTENER]: 🖼️
+2021. 02. 44. 10:37.44 [ACTIVITY MANAGER]: Activity(Unusual Memes)
+2021. 02. 44. 10:38.58 [MESSAGEREACTIONLISTENER]: 🖼️
+2021. 02. 44. 10:40.53 [MESSAGEREACTIONLISTENER]: 🤙
+2021. 02. 44. 10:41.10 [MESSAGEREACTIONLISTENER]: 👧
+2021. 02. 44. 10:42.44 [ACTIVITY MANAGER]: Activity(Unusual Memes)
+2021. 02. 44. 10:47.44 [ACTIVITY MANAGER]: Activity(No Man's Sky)
+2021. 02. 44. 10:52.44 [ACTIVITY MANAGER]: Activity(Minecraft)
+2021. 02. 44. 10:57.44 [ACTIVITY MANAGER]: Activity(Lindsey Stirling)
+2021. 02. 44. 11:02.44 [ACTIVITY MANAGER]: Activity(Unusual Memes)
+2021. 02. 44. 11:07.44 [ACTIVITY MANAGER]: Activity(Lifelight - AmaLee)
+2021. 02. 44. 11:12.44 [ACTIVITY MANAGER]: Activity(Disenchantment)
+2021. 02. 44. 11:17.44 [ACTIVITY MANAGER]: Activity(Fist Bump)
+2021. 02. 44. 11:22.44 [ACTIVITY MANAGER]: Activity(.help)
+2021. 02. 44. 11:26.08 [MESSAGEREACTIONLISTENER]: ❤️
+2021. 02. 44. 11:26.20 [MESSAGEREACTIONLISTENER]: ❤️
+2021. 02. 44. 11:27.44 [ACTIVITY MANAGER]: Activity(Minecraft)
+2021. 02. 44. 11:32.44 [ACTIVITY MANAGER]: Activity(Random Bot)
+2021. 02. 44. 11:37.44 [ACTIVITY MANAGER]: Activity(Disenchantment)
+2021. 02. 44. 11:39.32 [MESSAGEREACTIONLISTENER]: ❤️
