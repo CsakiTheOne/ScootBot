@@ -350,12 +350,7 @@ fun setBasicTriggers() {
         it.channel.sendMessage(ans.random()).queue()
     }
 
-    bot.triggers[""".*\b(vic+es.|retar).*"""] = {
-        it.addReaction("\uD83D\uDE02").queue()
-    }
-
     bot.triggers["""jó {0,1}éj.*"""] = {
-        it.addReaction("🌙").queue()
         val greetings = listOf("Aludj jól!", "Álmodj szépeket!", "Jó éjt!", "Jó éjszakát!", "Pihend ki magad!")
         it.channel.sendMessage(greetings.random()).queue()
     }
