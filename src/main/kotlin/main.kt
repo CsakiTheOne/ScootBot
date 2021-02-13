@@ -337,13 +337,13 @@ fun setBasicCommands() {
                     }
                 }
             }
-            it.channel.sendMessage("**Hype!** Reagálj erre az üzenetre! 🎉\n`[       START!       ]`").queue { msg ->
+            it.channel.sendMessage("**Hype!** Reagálj erre az üzenetre! 🎉\n`[       START!       ]` ${max * 5} másodpercetek van!").queue { msg ->
                 listener = bot.addReactionListener { event -> onHypeReact(event, msg) }
             }
             Timer().schedule(timerTask {
                 bot.reactionListeners.remove(listener)
                 it.channel.sendMessage("Hype vége! 🎉").queue()
-            }, (max * 10 * 1000).toLong())
+            }, (max * 5 * 1000).toLong())
         }
     }
 }
