@@ -1,4 +1,5 @@
 import Bot.Companion.makeRemovable
+import Bot.Companion.simplify
 import extra.Brainfuck
 import extra.EmojiGame
 import extra.LolChampions
@@ -44,10 +45,14 @@ fun main() {
             Activity.listening("Emerald Hill Zone"),
             Activity.listening("Fist Bump"),
             Activity.listening("Lifelight - AmaLee"),
+            Activity.listening("TheFatRat"),
             Activity.listening("Lindsey Stirling"),
             Activity.watching("Disenchantment"),
             Activity.watching("TikTok: @csakivevo"),
+            Activity.watching("Technoblade trolling Skeppy"),
             Activity.watching("Unusual Memes"),
+            Activity.watching("Mr. Robot"),
+            Activity.watching("🟧⬛"),
         )
         bot.getSelf().jda.presence.activity = activities.random()
         Data.log("Activity manager", bot.getSelf().jda.presence.activity.toString())
@@ -183,7 +188,7 @@ fun setBasicCommands() {
     }
 
     bot.commands["mondd"] = {
-        if (it.author.id == "259610472729280513") {
+        if (Data.admins.any { admin -> admin.id == it.author.id }) {
             it.channel.sendMessage(it.contentRaw.removePrefix(".mondd ")).queue()
         }
         else {
@@ -354,7 +359,14 @@ fun setBasicTriggers() {
         it.channel.sendMessage(greetings.random()).queue()
     }
 
-    bot.triggers["""hogy vagytok.*?|hogy vagy gombóc?"""]
+    bot.triggers["""mit csináltok?.*|ki mit csinál?.*|mit csináls*z* gombóc?.*"""] = {
+        val activityType = when (bot.getSelf().jda.presence.activity?.type) {
+            Activity.ActivityType.LISTENING -> "Zenét hallgatok 🎧"
+            Activity.ActivityType.WATCHING -> "Videót nézek 📽"
+            else -> "Játszok 🎮"
+        }
+        it.channel.sendMessage(activityType).queue()
+    }
 
     bot.triggers[""".*((letölt.*minecraft)|(minecraft.*letölt)).*\?.*"""] = {
         it.channel.sendMessage("A Minecraft-ot innen ajánlom letölteni:\nhttps://tlauncher.org/en/")
@@ -389,24 +401,15 @@ fun setBasicTriggers() {
         it.addReaction("😠").queue()
     }
 
-    bot.triggers[".*csáki.*"] = {
+    bot.triggers[""".*\b(csáki|bius|bianka|anka).*"""] = {
         val guildName = if (it.isFromGuild) "**Szerver:** ${it.guild.name} > ${it.channel.name}" else "**Privát:** ${it.channel.name}"
-        bot.getSelf().jda.getPrivateChannelById("783680267155406868")?.sendMessage(
-            EmbedBuilder()
-                .setTitle("Megemlítettek egy üzenetben")
-                .setDescription("$guildName\n**Üzenet:** ${it.contentRaw}\n**Írta:** ${it.author.asTag}")
-                .build()
-        )?.queue()
-    }
-
-    bot.triggers[".*(bius|anka|bianka).*"] = {
-        val guildName = if (it.isFromGuild) "**Szerver:** ${it.guild.name} > ${it.channel.name}" else "**Privát:** ${it.channel.name}"
-        bot.getSelf().jda.getPrivateChannelById("783680267155406868")?.sendMessage(
-            EmbedBuilder()
-                .setTitle("Megemlítették Biust egy üzenetben")
-                .setDescription("$guildName\n**Üzenet:** ${it.contentRaw}\n**Írta:** ${it.author.asTag}")
-                .build()
-        )?.queue()
+        val embed = EmbedBuilder()
+            .setTitle("Említés egy üzenetben")
+            .setDescription("$guildName\n**Üzenet:** ${it.contentRaw}\n**Írta:** ${it.author.asTag}")
+            .build()
+        for (admin in Data.admins) {
+            bot.getSelf().jda.getPrivateChannelById(admin.privateChannel)?.sendMessage(embed)?.queue()
+        }
     }
 }
 

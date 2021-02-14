@@ -16,6 +16,11 @@ class Data() {
     }
 
     companion object {
+        val admins = listOf(
+            Admin("Csáki", "259610472729280513", "783680267155406868", true),
+            Admin("Anka", "427127654735413258", "809843289150718042", true),
+        )
+
         fun log(sender: String, message: String) {
             File("./log.txt").appendText("${LocalDateTime.now().format(DateTimeFormatter.ofPattern("YYYY. MM. DD. HH:mm.ss"))} [${sender.toUpperCase()}]: $message\n")
         }

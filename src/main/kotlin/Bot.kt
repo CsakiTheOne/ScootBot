@@ -35,9 +35,7 @@ class Bot(token: String) {
                         Data.log("Bot", "Private message from ${msg.author.asTag} (Channel id: ${msg.channel.id}): $content")
                     }
                     for (aCommand in adminCommands) {
-                        if (content.startsWith(prefix + aCommand.key)) {
-                            // CsakiTheOne, Anka
-                            if (msg.author.id != "259610472729280513" && msg.author.id != "427127654735413258") break
+                        if (content.startsWith(prefix + aCommand.key) && Data.admins.any { it.id == msg.author.id }) {
                             Data.log("Bot", "Admin command received: $content Author: ${msg.author.asTag} (${msg.author.id})")
                             aCommand.value(msg)
                             msg.delete().queue()
