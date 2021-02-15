@@ -1,5 +1,2 @@
-2021. 02. 46. 11:13.24 [MAIN]: ----- BOT STARTED -----
-2021. 02. 46. 11:13.27 [ACTIVITY MANAGER]: Activity(Lindsey Stirling)
-2021. 02. 46. 11:13.30 [BOT]: Command received: .vibe Author: CsakiTheOne#8589 (259610472729280513)
-2021. 02. 46. 11:15.04 [BOT]: Command received: .vibe Author: hopelight#8114 (521357031391756291)
-2021. 02. 46. 11:18.27 [ACTIVITY MANAGER]: Activity(Disenchantment)
+2021. 02. 46. 19:49.37 [MAIN]: ----- BOT STARTED -----
+2021. 02. 46. 19:49.40 [ACTIVITY MANAGER]: Activity(Lindsey Stirling)

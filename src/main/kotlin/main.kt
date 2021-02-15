@@ -95,6 +95,16 @@ fun setAdminCommands() {
         Data.log("Admin", it.contentRaw.removePrefix(".log "))
     }
 
+    bot.adminCommands["guilds"] = {
+        val guilds = bot.getSelf().jda.guilds.joinToString("\n\n") { g -> "**${g.name}** (${g.memberCount})\nTulaj: ${g.owner?.user?.asTag}" }
+        it.channel.sendMessage(
+            EmbedBuilder()
+                .setTitle("Szerver infó")
+                .setDescription(guilds)
+                .build()
+        ).queue { msg -> msg.makeRemovable() }
+    }
+
     bot.adminCommands["activity"] = {
         if (it.contentRaw.contains("auto")) {
             autoActivity = true
@@ -248,6 +258,14 @@ fun setBasicCommands() {
                 .setDescription("```js\n$input\n```\n`> $ans`")
                 .build()
         ).queue { msg -> msg.makeRemovable() }
+    }
+
+    bot.commands["jso"] = {
+        val engine: ScriptEngine = ScriptEngineManager().getEngineByName("JavaScript")
+        val input = it.contentRaw.removePrefix(".jso").replace("```js", "")
+            .replace("`", "").replace("let", "var").trim()
+        val ans = engine.eval(input) as Any
+        it.channel.sendMessage(ans.toString()).queue()
     }
 
     bot.commands["szegz"] = {
@@ -432,14 +450,16 @@ fun setBasicTriggers() {
         it.addReaction("😠").queue()
     }
 
-    bot.triggers[""".*\b(csáki|bius|bianka|anka).*"""] = {
+    bot.triggers[""".*\b(csáki|bius|anka).*"""] = {
         val guildName = if (it.isFromGuild) "**Szerver:** ${it.guild.name} > ${it.channel.name}" else "**Privát:** ${it.channel.name}"
         val embed = EmbedBuilder()
             .setTitle("Említés egy üzenetben (Nem biztos, hogy PONT rólad van szó, csak azt figyelem hogy benne van-e egy bizonyos szöveg az üzenetben)")
             .setDescription("$guildName\n**Üzenet:** ${it.contentRaw}\n**Írta:** ${it.author.asTag}")
             .build()
         for (admin in Data.admins) {
-            bot.getSelf().jda.getPrivateChannelById(admin.privateChannel)?.sendMessage(embed)?.queue()
+            if (admin.alertMention) {
+                bot.getSelf().jda.getPrivateChannelById(admin.privateChannel)?.sendMessage(embed)?.queue()
+            }
         }
     }
 }
