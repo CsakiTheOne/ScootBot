@@ -268,6 +268,21 @@ fun setBasicCommands() {
         ).queue { msg -> msg.makeRemovable() }
     }
 
+    bot.commands["vibe"] = {
+        if (it.contentRaw.contains("end")) {
+            it.guild.audioManager.closeAudioConnection()
+        }
+        else {
+            val vc = it.member?.voiceState?.channel
+            if (vc == null) {
+                it.channel.sendMessage("Nem vagy hívásban, szóval nem tudom hová jöjjek.").queue { msg -> msg.makeRemovable() }
+            }
+            else {
+                it.guild.audioManager.openAudioConnection(vc)
+            }
+        }
+    }
+
     bot.commands["insta"] = {
         it.channel.sendMessage("Az instám: @csicskagombocek").queue { msg -> msg.makeRemovable() }
     }
@@ -403,7 +418,7 @@ fun setBasicTriggers() {
     }
 
     bot.triggers["""jó {0,1}éj.*"""] = {
-        val greetings = listOf("Aludj jól!", "Álmodj szépeket!", "Jó éjt!", "Jó éjszakát!", "Pihend ki magad!")
+        val greetings = listOf("Aludj jól!", "Álmodj szépeket!", "Jó éjt!", "Jó éjszakát!", "Pihend ki magad!", "Kitartást holnapra!")
         if (!tags.contains("cooldown_goodnight")) {
             it.channel.sendMessage(greetings.random()).queue()
             tags.add("cooldown_goodnight")
@@ -420,7 +435,7 @@ fun setBasicTriggers() {
     bot.triggers[""".*\b(csáki|bius|bianka|anka).*"""] = {
         val guildName = if (it.isFromGuild) "**Szerver:** ${it.guild.name} > ${it.channel.name}" else "**Privát:** ${it.channel.name}"
         val embed = EmbedBuilder()
-            .setTitle("Említés egy üzenetben")
+            .setTitle("Említés egy üzenetben (Nem biztos, hogy PONT rólad van szó, csak azt figyelem hogy benne van-e egy bizonyos szöveg az üzenetben)")
             .setDescription("$guildName\n**Üzenet:** ${it.contentRaw}\n**Írta:** ${it.author.asTag}")
             .build()
         for (admin in Data.admins) {
