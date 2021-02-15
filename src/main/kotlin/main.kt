@@ -445,7 +445,7 @@ fun setBasicTriggers() {
             tags.add("cooldown_goodnight")
             Timer().schedule(timerTask {
                 tags.remove("cooldown_goodnight")
-            }, 10000)
+            }, 15000)
         }
     }
 
