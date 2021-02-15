@@ -19,6 +19,7 @@ import kotlin.concurrent.timerTask
 lateinit var data: Data
 lateinit var bot: Bot
 var autoActivity = true
+var tags = mutableSetOf<String>()
 
 fun main() {
     data = Data.load()
@@ -36,6 +37,7 @@ fun main() {
     Timer().scheduleAtFixedRate(timerTask {
         if (!autoActivity) return@timerTask
         val activities = listOf(
+            Activity.playing("${bot.getSelf().jda.guilds.size} szerveren"),
             Activity.playing("HealTogether"),
             Activity.playing("Minecraft"),
             Activity.playing("No Man's Sky"),
@@ -237,9 +239,15 @@ fun setBasicCommands() {
 
     bot.commands["js"] = {
         val engine: ScriptEngine = ScriptEngineManager().getEngineByName("JavaScript")
-        val input = it.contentRaw.removePrefix(".js ")
+        val input = it.contentRaw.removePrefix(".js").replace("```js", "")
+            .replace("`", "").replace("let", "var").trim()
         val ans = engine.eval(input) as Any
-        it.channel.sendMessage("$input = $ans").queue { msg -> msg.makeRemovable() }
+        it.channel.sendMessage(
+            EmbedBuilder()
+                .setTitle("JavaScript")
+                .setDescription("```js\n$input\n```\n`> $ans`")
+                .build()
+        ).queue { msg -> msg.makeRemovable() }
     }
 
     bot.commands["szegz"] = {
@@ -379,7 +387,9 @@ fun setBasicTriggers() {
     }
 
     bot.triggers[".*szeret.*"] = {
-        it.addReaction("❤️").queue()
+        if (!it.contentRaw.simplify().contains("nem szeret")) {
+            it.addReaction("❤️").queue()
+        }
     }
 
     bot.triggers[".*yeet.*"] = {
@@ -394,7 +404,13 @@ fun setBasicTriggers() {
 
     bot.triggers["""jó {0,1}éj.*"""] = {
         val greetings = listOf("Aludj jól!", "Álmodj szépeket!", "Jó éjt!", "Jó éjszakát!", "Pihend ki magad!")
-        it.channel.sendMessage(greetings.random()).queue()
+        if (!tags.contains("cooldown_goodnight")) {
+            it.channel.sendMessage(greetings.random()).queue()
+            tags.add("cooldown_goodnight")
+            Timer().schedule(timerTask {
+                tags.remove("cooldown_goodnight")
+            }, 10000)
+        }
     }
 
     bot.triggers[""".*\b(baszdmeg|bazdmeg|fasz|gec|geci|kurva|fuck|rohadj|picsa|picsába|rohadék).*"""] = {
