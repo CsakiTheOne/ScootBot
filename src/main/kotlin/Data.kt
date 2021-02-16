@@ -1,4 +1,5 @@
 import com.google.gson.Gson
+import extra.CustomCommand
 import extra.NumGuesser
 import java.io.File
 import java.lang.Exception
@@ -6,6 +7,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 class Data() {
+    var customCommands = mutableListOf<CustomCommand>()
     var numGuesserGames = mutableListOf<NumGuesser>()
     var clickerMessageIds = mutableSetOf<String>()
 

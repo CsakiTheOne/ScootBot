@@ -1,9 +1,6 @@
 import Bot.Companion.makeRemovable
 import Bot.Companion.simplify
-import extra.Brainfuck
-import extra.EmojiGame
-import extra.LolChampions
-import extra.NumGuesser
+import extra.*
 import extra.adventure.Adventure
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.OnlineStatus
@@ -100,6 +97,33 @@ fun setHelp() {
                 .setDescription(helpMessage)
                 .build()
         ).queue { msg -> msg.makeRemovable() }
+    }
+
+    bot.commands["custom"] = {
+        if (it.contentRaw == ".custom") {
+            val helpMessage = "Új parancs: `.custom add <parancs>; <kimenet>; <egyéb beállítások>`\n" +
+                    "Törlés: `.custom delete <parancs>`\nBeállítások: minden emoji egy beállítás\n" +
+                    "- ❌: törölhető üzenet\n\n${data.customCommands.joinToString { cc -> cc.command }}\n\n" +
+                    "Prefix: `..`"
+            it.channel.sendMessage(
+                EmbedBuilder()
+                    .setColor(Color(0, 128, 255))
+                    .setTitle("Saját parancsok")
+                    .setDescription(helpMessage)
+                    .build()
+            ).queue { msg -> msg.makeRemovable() }
+        }
+        else if (it.contentRaw.startsWith(".custom add")) {
+            val params = it.contentRaw.removePrefix(".custom add ").split(";").map { param -> param.trim() }
+            data.customCommands.add(CustomCommand(params[0], params[1], params[2].contains("❌")))
+            data.save()
+            it.channel.sendMessage("Új parancs hozzáadva ✅").queue { msg -> msg.makeRemovable() }
+        }
+        else if (it.contentRaw.startsWith(".custom delete")) {
+            data.customCommands.removeIf { cc -> cc.command == it.contentRaw.removePrefix(".custom delete ") }
+            data.save()
+            it.channel.sendMessage("Parancs törölve ✅").queue { msg -> msg.makeRemovable() }
+        }
     }
 }
 
@@ -224,6 +248,17 @@ fun setBasicCommands() {
         }
     }
 
+    bot.commands["gift"] = {
+        it.channel.sendMessage(
+            EmbedBuilder()
+                .setTitle("A wild gift appeared", "https://youtu.be/dQw4w9WgXcQ")
+                .setThumbnail("https://static.wikia.nocookie.net/badcreepypasta/images/5/5e/Tumblr_966cc5d6fb3d9ef359cc10f994e26785_e24e7c68_640.png/revision/latest/scale-to-width-down/340?cb=20200229232309")
+                .setDescription("```\n     Choccy Milk     \n```")
+                .setColor(Color(199, 158, 120))
+                .build()
+        ).queue()
+    }
+
     bot.commands["lolchamp"] = {
         val champ = LolChampions.list.random()
         it.channel.sendMessage(
@@ -272,7 +307,12 @@ fun setBasicCommands() {
         val engine: ScriptEngine = ScriptEngineManager().getEngineByName("JavaScript")
         val input = it.contentRaw.removePrefix(".js").replace("```js", "")
             .replace("`", "").replace("let", "var").trim()
-        val ans = engine.eval(input) as Any
+        val ans = try {
+            engine.eval(input) as Any
+        }
+        catch (ex: Exception) {
+            ex.message
+        }
         it.channel.sendMessage(
             EmbedBuilder()
                 .setTitle("JavaScript")
@@ -285,7 +325,12 @@ fun setBasicCommands() {
         val engine: ScriptEngine = ScriptEngineManager().getEngineByName("JavaScript")
         val input = it.contentRaw.removePrefix(".jso").replace("```js", "")
             .replace("`", "").replace("let", "var").trim()
-        val ans = engine.eval(input) as Any
+        val ans = try {
+            engine.eval(input) as Any
+        }
+        catch (ex: Exception) {
+            ex.message
+        }
         it.channel.sendMessage(ans.toString()).queue()
     }
 
@@ -459,11 +504,7 @@ fun setBasicTriggers() {
             .setTitle("Említés egy üzenetben (Nem biztos, hogy PONT rólad van szó, csak azt figyelem hogy benne van-e egy bizonyos szöveg az üzenetben)")
             .setDescription("$guildName\n**Üzenet:** ${it.contentRaw}\n**Írta:** ${it.author.asTag}")
             .build()
-        for (admin in Data.admins) {
-            if (admin.alertMention) {
-                bot.getSelf().jda.getPrivateChannelById(admin.privateChannel)?.sendMessage(embed)?.queue()
-            }
-        }
+        bot.getSelf().jda.getPrivateChannelById(Data.admins.first { a -> a.alertMention }.privateChannel)?.sendMessage(embed)?.queue()
     }
 }
 

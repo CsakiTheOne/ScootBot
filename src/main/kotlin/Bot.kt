@@ -57,6 +57,16 @@ class Bot(token: String) {
                             break
                         }
                     }
+                    for (cc in data.customCommands) {
+                        if (content.startsWith(prefix + prefix + cc.command)) {
+                            Data.log("Bot", "Custom command received: $content Author: ${msg.author.asTag} (${msg.author.id})")
+                            msg.channel.sendMessage(cc.output).queue {
+                                if (cc.isRemovable) it.makeRemovable()
+                            }
+                            msg.delete().queue()
+                            break
+                        }
+                    }
                 }
                 override fun onMessageReactionAdd(event: MessageReactionAddEvent) {
                     if (event.user?.isBot == true) return
