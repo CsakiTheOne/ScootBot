@@ -103,8 +103,8 @@ fun setHelp() {
         if (it.contentRaw == ".custom") {
             val helpMessage = "Új parancs: `.custom add <parancs>; <kimenet>; <egyéb beállítások>`\n" +
                     "Törlés: `.custom delete <parancs>`\nBeállítások: minden emoji egy beállítás\n" +
-                    "- ❌: törölhető üzenet\n\n${data.customCommands.joinToString { cc -> cc.command }}\n\n" +
-                    "Prefix: `..`"
+                    "❌: törölhető üzenet\n\n${data.customCommands.joinToString { cc -> cc.command }}\n" +
+                    "**A saját parancsok prefixe:** `..`"
             it.channel.sendMessage(
                 EmbedBuilder()
                     .setColor(Color(0, 128, 255))
