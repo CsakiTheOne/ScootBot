@@ -50,13 +50,6 @@ class Bot(token: String) {
                             break
                         }
                     }
-                    for (trigger in triggers) {
-                        if (trigger.key.simplify().toRegex().matches(content.simplify())) {
-                            Data.log("Bot", "Trigger found in message: $content Author: ${msg.author.asTag} (${msg.author.id})")
-                            trigger.value(msg)
-                            break
-                        }
-                    }
                     for (cc in data.customCommands) {
                         if (content.startsWith(prefix + prefix + cc.command)) {
                             Data.log("Bot", "Custom command received: $content Author: ${msg.author.asTag} (${msg.author.id})")
@@ -65,6 +58,12 @@ class Bot(token: String) {
                             }
                             msg.delete().queue()
                             break
+                        }
+                    }
+                    for (trigger in triggers) {
+                        if (trigger.key.simplify().toRegex().matches(content.simplify())) {
+                            Data.log("Bot", "Trigger found in message: $content Author: ${msg.author.asTag} (${msg.author.id})")
+                            trigger.value(msg)
                         }
                     }
                 }

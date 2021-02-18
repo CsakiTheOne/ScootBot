@@ -19,8 +19,8 @@ class Data() {
 
     companion object {
         val admins = listOf(
-            Admin("Csáki", "259610472729280513", "783680267155406868", true),
-            Admin("Anka", "427127654735413258", "809843289150718042", true),
+            Admin("Csáki", "259610472729280513", "783680267155406868"),
+            Admin("Anka", "427127654735413258", "809843289150718042"),
         )
 
         fun log(sender: String, message: String) {
@@ -29,8 +29,14 @@ class Data() {
 
         fun logRead() : String {
             val logs = File("./log.txt").readLines()
-            val startIndex = if (logs.size < 200) 0 else logs.size - 200
-            return logs.subList(startIndex, logs.size - 1).joinToString("\n")
+            var logText = logs.joinToString("\n")
+            var startIndex = 0
+            while (logText.length > 1900) {
+                startIndex++
+                logText = logs.subList(startIndex, logs.size - 1).joinToString("\n")
+            }
+            return logText
+
         }
 
         fun logClear() {

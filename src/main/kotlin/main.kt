@@ -504,7 +504,16 @@ fun setBasicTriggers() {
             .setTitle("Említés egy üzenetben (Nem biztos, hogy PONT rólad van szó, csak azt figyelem hogy benne van-e egy bizonyos szöveg az üzenetben)")
             .setDescription("$guildName\n**Üzenet:** ${it.contentRaw}\n**Írta:** ${it.author.asTag}")
             .build()
-        bot.getSelf().jda.getPrivateChannelById(Data.admins.first { a -> a.alertMention }.privateChannel)?.sendMessage(embed)?.queue()
+        bot.getSelf().jda.getPrivateChannelById(Data.admins[0].privateChannel)?.sendMessage(embed)?.queue()
+    }
+
+    bot.triggers[""".*\b(bius|anka).*"""] = {
+        val guildName = if (it.isFromGuild) "**Szerver:** ${it.guild.name} > ${it.channel.name}" else "**Privát:** ${it.channel.name}"
+        val embed = EmbedBuilder()
+            .setTitle("Említés egy üzenetben (Nem biztos, hogy PONT rólad van szó, csak azt figyelem hogy benne van-e egy bizonyos szöveg az üzenetben)")
+            .setDescription("$guildName\n**Üzenet:** ${it.contentRaw}\n**Írta:** ${it.author.asTag}")
+            .build()
+        bot.getSelf().jda.getPrivateChannelById(Data.admins[1].privateChannel)?.sendMessage(embed)?.queue()
     }
 }
 
