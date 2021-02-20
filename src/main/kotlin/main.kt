@@ -468,7 +468,7 @@ fun setBasicTriggers() {
     }
 
     bot.triggers[".*szeret.*"] = {
-        if (!it.contentRaw.contains("""nem *szeret""".toRegex())) {
+        if (!it.contentRaw.simplify().contains("""nem *szeret""".toRegex())) {
             it.addReaction("❤️").queue()
         }
     }
