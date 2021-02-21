@@ -107,7 +107,7 @@ class Bot(token: String) : ListenerAdapter() {
         }
 
         fun String.simplify() : String {
-            return this.toLowerCase().trim().replace("á", "a").replace("e", "é")
+            return this.toLowerCase().trim().replace("á", "a").replace("é", "e")
                 .replace("í", "i").replace("ó", "o").replace("ö", "o")
                 .replace("ő", "o").replace("ű", "u").replace("ü", "u")
                 .replace("ú", "u")

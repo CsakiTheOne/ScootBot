@@ -401,6 +401,14 @@ fun setBasicCommands() {
         it.channel.sendMessage(EmojiGame.generate()).queue()
     }
 
+    bot.commands["fvm"] = {
+        it.channel.sendMessage("Felelsz vagy mersz?").queue { msg ->
+            msg.addReaction("🗨").queue()
+            msg.addReaction("💪").queue()
+            msg.makeRemovable()
+        }
+    }
+
     bot.commands["hype"] = {
         if (it.contentRaw == ".hype") {
             it.channel.sendMessage("A parancs használata: `.hype <szám>`").queue { msg -> msg.makeRemovable() }
@@ -446,7 +454,8 @@ fun setBasicTriggers() {
     bot.triggers[".*@random.*"] = {
         it.guild.loadMembers().onSuccess { members ->
             val randomMember = members.filter { m ->
-                (m.onlineStatus == OnlineStatus.ONLINE || m.onlineStatus == OnlineStatus.INVISIBLE) && !m.user.isBot
+                (m.onlineStatus == OnlineStatus.ONLINE || m.onlineStatus == OnlineStatus.INVISIBLE) &&
+                !m.user.isBot && m.user != it.author
             }.random()
             it.reply(randomMember.asMention).queue()
         }
@@ -477,7 +486,7 @@ fun setBasicTriggers() {
     }
 
     bot.triggers[".*szeret.*"] = {
-        if (!it.contentRaw.simplify().contains("""nem *szeret""".toRegex())) {
+        if (!it.contentRaw.simplify().contains("nem szeret")) {
             it.addReaction("❤️").queue()
         }
     }
