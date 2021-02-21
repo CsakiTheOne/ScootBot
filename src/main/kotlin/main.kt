@@ -443,6 +443,15 @@ fun setBasicCommands() {
 }
 
 fun setBasicTriggers() {
+    bot.triggers[".*@random.*"] = {
+        it.guild.loadMembers().onSuccess { members ->
+            val randomMember = members.filter { m ->
+                (m.onlineStatus == OnlineStatus.ONLINE || m.onlineStatus == OnlineStatus.INVISIBLE) && !m.user.isBot
+            }.random()
+            it.reply(randomMember.asMention).queue()
+        }
+    }
+
     bot.triggers["""((szia|helló|hali|csá|cső|hey|henlo) gombóc!*)|sziaszto+k.*|gombóc"""] = {
         val greetings = listOf("Szia!", "Hali!", "Henlo!", "Hey!", "Heyho!")
         it.channel.sendMessage(greetings.random()).queue()
@@ -458,13 +467,13 @@ fun setBasicTriggers() {
     }
 
     bot.triggers[""".*((letölt.*minecraft)|(minecraft.*letölt)).*\?.*"""] = {
-        it.channel.sendMessage("A Minecraft-ot innen ajánlom letölteni:\nhttps://tlauncher.org/en/")
+        it.reply("A Minecraft-ot innen ajánlom letölteni:\nhttps://tlauncher.org/en/")
             .queue { msg -> msg.makeRemovable() }
     }
 
     bot.triggers["kő|papír|olló|\uD83E\uDEA8|\uD83E\uDDFB|✂️"] = {
-        val answers = listOf("Kő", "Papír", "Olló")
-        it.channel.sendMessage(answers.random()).queue()
+        val answers = listOf("Kő \uD83E\uDEA8", "Papír \uD83E\uDDFB", "Olló ✂️")
+        it.reply(answers.random()).queue()
     }
 
     bot.triggers[".*szeret.*"] = {
@@ -477,10 +486,8 @@ fun setBasicTriggers() {
         it.addReaction("\uD83D\uDCA8").queue()
     }
 
-    bot.triggers[".*(tec+el|tetszel).*"] = {
-        it.addReaction("❤️").queue()
-        val ans = listOf("Te is!", "Te is nekem!")
-        it.channel.sendMessage(ans.random()).queue()
+    bot.triggers["jó {0,1}reggelt(\\.|!)*"] = {
+        it.addReaction("🌄").queue()
     }
 
     bot.triggers["""jó {0,1}éj.*"""] = {
@@ -494,7 +501,7 @@ fun setBasicTriggers() {
         }
     }
 
-    bot.triggers[""".*\b(baszdmeg|bazdmeg|fasz|gec|geci|kurva|fuck|rohadj|picsa|picsába|rohadék).*"""] = {
+    bot.triggers[""".*\b(baszdmeg|bazdmeg|fasz|gec|geci|kurva|ribanc|buzi|fuck|rohadj|picsa|picsába|rohadék).*"""] = {
         it.addReaction("😠").queue()
     }
 
@@ -572,17 +579,17 @@ fun setNumGuesserGame() {
         when {
             x > numGuesser.num -> {
                 it.channel.retrieveMessageById(numGuesser.messageId).queue { msg ->
-                    it.channel.editMessageById(numGuesser.messageId, "${msg.contentRaw}\n$x: A gondolt szám kisebb.").queue()
+                    it.channel.editMessageById(numGuesser.messageId, "${msg.contentRaw}\n${it.author.name}: A gondolt szám kisebb, mint $x.").queue()
                 }
             }
             x < numGuesser.num -> {
                 it.channel.retrieveMessageById(numGuesser.messageId).queue { msg ->
-                    it.channel.editMessageById(numGuesser.messageId, "${msg.contentRaw}\n$x: A gondolt szám nagyobb.").queue()
+                    it.channel.editMessageById(numGuesser.messageId, "${msg.contentRaw}\n${it.author.name}: A gondolt szám nagyobb, mint $x.").queue()
                 }
             }
             x == numGuesser.num -> {
                 it.channel.retrieveMessageById(numGuesser.messageId).queue { msg ->
-                    it.channel.editMessageById(numGuesser.messageId, "${msg.contentRaw}\n$x: ${it.author.name} eltalálta! 🎉").queue {
+                    it.channel.editMessageById(numGuesser.messageId, "${msg.contentRaw}\n${it.author.name} eltalálta, hogy a szám $x! 🎉").queue {
                         msg.makeRemovable()
                         data.numGuesserGames.remove(numGuesser)
                     }

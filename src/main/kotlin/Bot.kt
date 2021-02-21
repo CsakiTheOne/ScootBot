@@ -7,7 +7,7 @@ import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.requests.GatewayIntent
 
-class Bot(token: String) {
+class Bot(token: String) : ListenerAdapter() {
     var prefix = "."
     val adminCommands = mutableMapOf<String, (msg: Message) -> Unit>()
     val commands = mutableMapOf<String, (msg: Message) -> Unit>()
@@ -23,73 +23,75 @@ class Bot(token: String) {
         gatewayIntents.add(GatewayIntent.DIRECT_MESSAGE_REACTIONS)
         gatewayIntents.add(GatewayIntent.GUILD_MESSAGE_REACTIONS)
         JDABuilder.create(token, gatewayIntents)
-            .addEventListeners(object: ListenerAdapter() {
-                override fun onReady(event: ReadyEvent) {
-                    self = event.jda.selfUser
-                }
-                override fun onMessageReceived(event: MessageReceivedEvent) {
-                    val msg = event.message
-                    val content = msg.contentRaw.replace("<@!", "<@").replace(self.asMention + " ", ".")
-                    if (msg.author.isBot) return
-                    if (!msg.isFromGuild) {
-                        Data.log("Bot", "Private message from ${msg.author.asTag} (Channel id: ${msg.channel.id}): $content")
-                    }
-                    for (aCommand in adminCommands) {
-                        if (content.startsWith(prefix + aCommand.key) && Data.admins.any { it.id == msg.author.id }) {
-                            Data.log("Bot", "Admin command received: $content Author: ${msg.author.asTag} (${msg.author.id})")
-                            aCommand.value(msg)
-                            msg.delete().queue()
-                            break
-                        }
-                    }
-                    for (command in commands) {
-                        if (content.startsWith(prefix + command.key)) {
-                            Data.log("Bot", "Command received: $content Author: ${msg.author.asTag} (${msg.author.id})")
-                            command.value(msg)
-                            msg.delete().queue()
-                            break
-                        }
-                    }
-                    for (cc in data.customCommands) {
-                        if (content.startsWith(prefix + prefix + cc.command)) {
-                            Data.log("Bot", "Custom command received: $content Author: ${msg.author.asTag} (${msg.author.id})")
-                            msg.channel.sendMessage(cc.output).queue {
-                                if (cc.isRemovable) it.makeRemovable()
-                            }
-                            msg.delete().queue()
-                            break
-                        }
-                    }
-                    for (trigger in triggers) {
-                        if (trigger.key.simplify().toRegex().matches(content.simplify())) {
-                            Data.log("Bot", "Trigger found in message: $content Author: ${msg.author.asTag} (${msg.author.id})")
-                            trigger.value(msg)
-                        }
-                    }
-                }
-                override fun onMessageReactionAdd(event: MessageReactionAddEvent) {
-                    if (event.user?.isBot == true) return
-                    val emoji = if (event.reactionEmote.isEmoji) event.reactionEmote.emoji else "custom emote"
-                    Data.log("MessageReactionListener", emoji)
-                    if (emoji == "❌") {
-                        event.retrieveMessage().queue { msg ->
-                            val isRemovable = msg.reactions.any { react ->
-                                (react.isSelf) && react.reactionEmote.emoji == "❌"
-                            }
-                            if (isRemovable) msg.delete().queue()
-                        }
-                    }
-                    else if (emoji == "\uD83D\uDC94") {
-                        event.retrieveMessage().queue { msg ->
-                            msg.removeReaction("❤️", self).queue()
-                        }
-                    }
-                    for (reactionListener in reactionListeners) {
-                        reactionListener(event)
-                    }
-                }
-            })
+            .addEventListeners(this)
             .build()
+    }
+
+    override fun onReady(event: ReadyEvent) {
+        self = event.jda.selfUser
+    }
+
+    override fun onMessageReceived(event: MessageReceivedEvent) {
+        val msg = event.message
+        val content = msg.contentRaw.replace("<@!", "<@").replace(self.asMention + " ", ".")
+        if (msg.author.isBot) return
+        if (!msg.isFromGuild) {
+            Data.log("Bot", "Private message from ${msg.author.asTag} (Channel id: ${msg.channel.id}): $content")
+        }
+        for (aCommand in adminCommands) {
+            if (content.startsWith(prefix + aCommand.key) && Data.admins.any { it.id == msg.author.id }) {
+                Data.log("Bot", "Admin command received: $content Author: ${msg.author.asTag} (${msg.author.id})")
+                aCommand.value(msg)
+                msg.delete().queue()
+                break
+            }
+        }
+        for (command in commands) {
+            if (content.startsWith(prefix + command.key)) {
+                Data.log("Bot", "Command received: $content Author: ${msg.author.asTag} (${msg.author.id})")
+                command.value(msg)
+                msg.delete().queue()
+                break
+            }
+        }
+        for (cc in data.customCommands) {
+            if (content.startsWith(prefix + prefix + cc.command)) {
+                Data.log("Bot", "Custom command received: $content Author: ${msg.author.asTag} (${msg.author.id})")
+                msg.channel.sendMessage(cc.output).queue {
+                    if (cc.isRemovable) it.makeRemovable()
+                }
+                msg.delete().queue()
+                break
+            }
+        }
+        for (trigger in triggers) {
+            if (trigger.key.simplify().toRegex().matches(content.simplify())) {
+                Data.log("Bot", "Trigger found in message: $content Author: ${msg.author.asTag} (${msg.author.id})")
+                trigger.value(msg)
+            }
+        }
+    }
+
+    override fun onMessageReactionAdd(event: MessageReactionAddEvent) {
+        if (event.user?.isBot == true) return
+        val emoji = if (event.reactionEmote.isEmoji) event.reactionEmote.emoji else "custom emote"
+        Data.log("MessageReactionListener", emoji)
+        if (emoji == "❌") {
+            event.retrieveMessage().queue { msg ->
+                val isRemovable = msg.reactions.any { react ->
+                    (react.isSelf) && react.reactionEmote.emoji == "❌"
+                }
+                if (isRemovable) msg.delete().queue()
+            }
+        }
+        else if (emoji == "\uD83D\uDC94") {
+            event.retrieveMessage().queue { msg ->
+                msg.removeReaction("❤️", self).queue()
+            }
+        }
+        for (reactionListener in reactionListeners) {
+            reactionListener(event)
+        }
     }
 
     fun getSelf() = self
