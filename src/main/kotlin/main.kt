@@ -50,6 +50,7 @@ fun main() {
             Activity.watching("Disenchantment"),
             Activity.watching("TikTok: @csakivevo"),
             Activity.watching("Technoblade trolling Skeppy"),
+            Activity.watching("Minecraft stream online órán"),
             Activity.watching("Unusual Memes"),
             Activity.watching("Mr. Robot"),
             Activity.watching("🟧⬛"),
