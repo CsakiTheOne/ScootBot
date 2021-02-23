@@ -617,7 +617,7 @@ fun setClickerGame() {
 fun setNumGuesserGame() {
     bot.commands["számkitaláló"] = {
         val max = if (it.contentRaw.contains(" ")) it.contentRaw.split(" ")[1].toInt() else 100
-        it.channel.sendMessage("Gondoltam egy számra 0 és $max között.\nTippelj: `.tipp <szám>`").queue { msg ->
+        it.channel.sendMessage("Gondoltam egy számra 0 és $max között.\nTippelj: `.tipp <szám>` Például: `.tipp ${(Math.random() * max).toInt()}`").queue { msg ->
             data.numGuesserGames.add(NumGuesser(it.guild.id, msg.id, (0..max).random()))
         }
     }
