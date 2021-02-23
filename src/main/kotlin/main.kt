@@ -38,6 +38,7 @@ fun main() {
             Activity.playing("${bot.getSelf().jda.guilds.size} szerveren"),
             Activity.playing("HealTogether"),
             Activity.playing("Minecraft"),
+            Activity.playing("Terraria (köszönöm @Krey)"),
             Activity.playing("No Man's Sky"),
             Activity.playing("Random Bot"),
             Activity.playing("Sonic Mania"),
@@ -102,7 +103,7 @@ fun setHelp() {
 
     bot.commands["custom"] = {
         if (it.contentRaw == ".custom") {
-            val helpMessage = "Új parancs: `.custom add <parancs>; <kimenet>; <egyéb beállítások>`\n" +
+            val helpMessage = "Új parancs: `.custom add <parancs>; [kimenet]; [egyéb beállítások]`\n" +
                     "Törlés: `.custom delete <parancs>`\nBeállítások: minden emoji egy beállítás\n" +
                     "❌: törölhető üzenet\n\n${data.customCommands.joinToString { cc -> cc.command }}\n" +
                     "**A saját parancsok prefixe:** `..`"
@@ -116,9 +117,18 @@ fun setHelp() {
         }
         else if (it.contentRaw.startsWith(".custom add")) {
             val params = it.contentRaw.removePrefix(".custom add ").split(";").map { param -> param.trim() }
-            data.customCommands.add(CustomCommand(params[0], params[1], params[2].contains("❌")))
-            data.save()
-            it.channel.sendMessage("Új parancs hozzáadva ✅").queue { msg -> msg.makeRemovable() }
+            if (data.customCommands.any { cc -> cc.command == params[0] }) {
+                it.channel.sendMessage("Már van ilyen parancs!").queue { msg -> msg.makeRemovable() }
+            }
+            else {
+                when (params.size) {
+                    3 -> data.customCommands.add(CustomCommand(params[0], params[1], params[2].contains("❌")))
+                    2 -> data.customCommands.add(CustomCommand(params[0], params[1], false))
+                    1 -> data.customCommands.add(CustomCommand(params[0], "Ez a parancs nem csinál semmit.", true))
+                }
+                data.save()
+                if (params.size < 4) it.channel.sendMessage("Új parancs hozzáadva ✅").queue { msg -> msg.makeRemovable() }
+            }
         }
         else if (it.contentRaw.startsWith(".custom delete")) {
             data.customCommands.removeIf { cc -> cc.command == it.contentRaw.removePrefix(".custom delete ") }
@@ -204,6 +214,26 @@ fun setAdminCommands() {
 fun setBasicCommands() {
     bot.commands["ping"] = {
         it.channel.sendMessage(":ping_pong:").queue()
+    }
+
+    bot.commands["tagok"] = {
+        it.guild.loadMembers().onSuccess { members ->
+            val csakiStatus = members.firstOrNull { m -> m.id == Data.admins[0].id }?.onlineStatus ?: OnlineStatus.UNKNOWN
+            it.channel.sendMessage(
+                EmbedBuilder()
+                    .setTitle("Szerver tagok (${members.size})")
+                    .setDescription(
+                        "🟢 online: ${members.filter { m -> m.onlineStatus == OnlineStatus.ONLINE }.size}\n" +
+                        "🟡 tétlen: ${members.filter { m -> m.onlineStatus == OnlineStatus.IDLE }.size}\n" +
+                        "🔴 elfoglalt: ${members.filter { m -> m.onlineStatus == OnlineStatus.DO_NOT_DISTURB }.size}\n" +
+                        "📡 offline: ${members.filter { m -> m.onlineStatus == OnlineStatus.OFFLINE }.size}\n" +
+                        "🤖 bot: ${members.filter { m -> m.user.isBot }.size}\n" +
+                        "Szerver tulaj (${it.guild.owner?.user?.name}): ${it.guild.owner?.onlineStatus}\n" +
+                        "Gombóc tulaj (${Data.admins[0].name}): $csakiStatus"
+                    )
+                    .build()
+            ).queue { msg -> msg.makeRemovable() }
+        }
     }
 
     bot.commands["mondd"] = {
@@ -452,10 +482,19 @@ fun setBasicCommands() {
 }
 
 fun setBasicTriggers() {
+    bot.triggers[".*@o-random.*"] = {
+        it.guild.loadMembers().onSuccess { members ->
+            val randomMember = members.filter { m ->
+                m.onlineStatus == OnlineStatus.ONLINE &&
+                !m.user.isBot && m.user != it.author
+            }.random()
+            it.reply(randomMember.asMention).queue()
+        }
+    }
+
     bot.triggers[".*@random.*"] = {
         it.guild.loadMembers().onSuccess { members ->
             val randomMember = members.filter { m ->
-                (m.onlineStatus == OnlineStatus.ONLINE || m.onlineStatus == OnlineStatus.INVISIBLE) &&
                 !m.user.isBot && m.user != it.author
             }.random()
             it.reply(randomMember.asMention).queue()
