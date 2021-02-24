@@ -309,7 +309,7 @@ fun setBasicCommands() {
         else {
             val jsMathMap = hashMapOf(
                 "sin" to "Math.sin", "cos" to "Math.cos", "tan" to "Math.tan", "pi" to "Math.PI", "sqrt" to "Math.sqrt",
-                "random" to "Math.random()", "rdm" to "Math.random()", "pow" to "Math.pow"
+                "random" to "Math.random()", "rdm" to "Math.random()", "pow" to "Math.pow", "abs" to "Math.abs"
             )
             val engine: ScriptEngine = ScriptEngineManager().getEngineByName("JavaScript")
             val inputRaw = it.contentRaw.removePrefix(".matek ")
@@ -319,6 +319,45 @@ fun setBasicCommands() {
             }
             val ans = engine.eval(input) as Number
             it.channel.sendMessage("$inputRaw = $ans").queue { msg -> msg.makeRemovable() }
+        }
+    }
+
+    bot.commands["függvény"] = {
+        if (it.contentRaw == ".függvény") {
+            it.channel.sendMessage("Így használd a parancsot: `.függvény <függvény teste>; <tartomány>` " +
+                    "Például: `.függvény abs(x - 1) + 2; 5`\n").queue { msg -> msg.makeRemovable() }
+        }
+        else {
+            val jsMathMap = hashMapOf(
+                "sin" to "Math.sin", "cos" to "Math.cos", "tan" to "Math.tan", "pi" to "Math.PI", "sqrt" to "Math.sqrt",
+                "random" to "Math.random()", "rdm" to "Math.random()", "pow" to "Math.pow", "abs" to "Math.abs"
+            )
+            val engine: ScriptEngine = ScriptEngineManager().getEngineByName("JavaScript")
+            val inputRaw = it.contentRaw.removePrefix(".függvény ").split(';')[0].trim()
+            var input = inputRaw
+            val checkRange = it.contentRaw.split(';')[1].trim().toInt()
+            for (pair in jsMathMap) {
+                input = input.replace(pair.key, pair.value)
+            }
+            val f = mutableMapOf<Int, Float>()
+            val v = mutableListOf<Float>()
+            for (i in -checkRange..checkRange) {
+                val x = (engine.eval(input.replace("x", i.toString())) as Number).toFloat()
+                v.add(x)
+                f[i] = x
+            }
+            var graph = ""
+            for (y in -checkRange..checkRange) {
+                for (x in -checkRange..checkRange) {
+                    graph += if (f[x]?.toInt() ?: 0 == -y) "██"
+                    else if (y == 0) "--"
+                    else if (x == 0) " |"
+                    else "  "
+                }
+                graph += "\n"
+            }
+            val ans = f.toString()
+            it.channel.sendMessage("f(x) = $inputRaw\n```\n$ans\n$graph\n```").queue { msg -> msg.makeRemovable() }
         }
     }
 
