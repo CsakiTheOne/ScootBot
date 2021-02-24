@@ -434,7 +434,7 @@ fun setBasicCommands() {
 
         fun sendEmojiQuiz() {
             var question = questions.keys.random()
-            it.channel.sendMessage("$question 🔃: volt már ❓: megoldás\nKövetkező: `.emoji kvíz`").queue { msg ->
+            it.channel.sendMessage("$question\n🔃: volt már ❓: megoldás | Következő: `.emoji kvíz`").queue { msg ->
                 msg.addReaction("🔃").queue()
                 msg.addReaction("❓").queue()
                 bot.reactionListeners.add { event ->
@@ -502,13 +502,13 @@ fun setBasicCommands() {
                     }
                 }
             }
-            it.channel.sendMessage("**Hype!** Reagálj erre az üzenetre! 🎉\n`[       START!       ]` ${max * 5} másodpercetek van!").queue { msg ->
+            it.channel.sendMessage("**Hype!** Reagálj erre az üzenetre! 🎉\n`[       START!       ]` ${max * 2} másodpercetek van!").queue { msg ->
                 listener = bot.addReactionListener { event -> onHypeReact(event, msg) }
             }
             Timer().schedule(timerTask {
                 bot.reactionListeners.remove(listener)
-                it.channel.sendMessage("Hype vége! 🎉").queue()
-            }, (max * 3 * 1000).toLong())
+                it.channel.sendMessage("Hype vége! 🎉 ||Kell egy kis idő a reakciók összeszámolásához, de szép volt!||").queue()
+            }, (max * 2 * 1000).toLong())
         }
     }
 
