@@ -46,6 +46,7 @@ fun main() {
             Activity.listening("Emerald Hill Zone"),
             Activity.listening("Fist Bump"),
             Activity.listening("Lifelight - AmaLee"),
+            Activity.listening("Thunderstruck - AC/DC"),
             Activity.listening("TheFatRat"),
             Activity.listening("Lindsey Stirling"),
             Activity.watching("Disenchantment"),
@@ -617,34 +618,35 @@ fun setClickerGame() {
 fun setNumGuesserGame() {
     bot.commands["számkitaláló"] = {
         val max = if (it.contentRaw.contains(" ")) it.contentRaw.split(" ")[1].toInt() else 100
-        it.channel.sendMessage("Gondoltam egy számra 0 és $max között.\nTippelj: `.tipp <szám>` Például: `.tipp ${(Math.random() * max).toInt()}`").queue { msg ->
-            data.numGuesserGames.add(NumGuesser(it.guild.id, msg.id, (0..max).random()))
+        it.channel.sendMessage("Gondoltam egy számra 0 és $max között.\nTippelj: írd le simán a számot chat-re!").queue { msg ->
+            data.numGuesserGames.add(NumGuesser(it.guild.id, it.channel.id, msg.id, (0..max).random()))
         }
     }
 
-    bot.commands["tipp"] = {
-        val x = it.contentRaw.removePrefix(".tipp ").toInt()
-        val numGuesser = data.numGuesserGames.first { ng -> ng.guildId == it.guild.id }
+    bot.triggers["[0-9]+"] = {
+        val x = it.contentRaw.toInt()
+        val numGuesser = data.numGuesserGames.first { ng -> ng.guildId == it.guild.id && ng.channelId == it.channel.id }
         when {
             x > numGuesser.num -> {
                 it.channel.retrieveMessageById(numGuesser.messageId).queue { msg ->
-                    it.channel.editMessageById(numGuesser.messageId, "${msg.contentRaw}\n${it.author.name}: A gondolt szám kisebb, mint $x.").queue()
+                    it.channel.editMessageById(numGuesser.messageId, "${msg.contentRaw}\n${it.author.name}: **X < $x**").queue()
                 }
             }
             x < numGuesser.num -> {
                 it.channel.retrieveMessageById(numGuesser.messageId).queue { msg ->
-                    it.channel.editMessageById(numGuesser.messageId, "${msg.contentRaw}\n${it.author.name}: A gondolt szám nagyobb, mint $x.").queue()
+                    it.channel.editMessageById(numGuesser.messageId, "${msg.contentRaw}\n${it.author.name}: **X > $x**").queue()
                 }
             }
             x == numGuesser.num -> {
                 it.channel.retrieveMessageById(numGuesser.messageId).queue { msg ->
-                    it.channel.editMessageById(numGuesser.messageId, "${msg.contentRaw}\n${it.author.name} eltalálta, hogy a szám $x! 🎉").queue {
+                    it.channel.editMessageById(numGuesser.messageId, "${msg.contentRaw}\n${it.author.name} eltalálta, hogy a szám $x! 🎉\nÚj játék: `.számkitaláló` vagy `.számkitaláló <maximum>`").queue {
                         msg.makeRemovable()
                         data.numGuesserGames.remove(numGuesser)
                     }
                 }
             }
         }
+        it.delete().queue()
     }
 }
 
