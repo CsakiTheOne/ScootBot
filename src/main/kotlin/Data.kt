@@ -1,20 +1,34 @@
 import com.google.gson.Gson
 import extra.CustomCommand
 import extra.NumGuesser
+import extra.SimpleChannel
+import net.dv8tion.jda.api.JDA
+import net.dv8tion.jda.api.entities.Message
+import net.dv8tion.jda.api.entities.MessageChannel
+import net.dv8tion.jda.api.entities.MessageEmbed
 import java.io.File
 import java.lang.Exception
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 class Data() {
+    var diaryChannel = SimpleChannel("", "")
     var customCommands = mutableListOf<CustomCommand>()
-    var numGuesserGames = mutableListOf<NumGuesser>()
     var clickerMessageIds = mutableSetOf<String>()
+    var clicks = mutableMapOf<String, Int>()
 
     fun save() {
         val gson = Gson()
         val dataText = gson.toJson(this)
         File("./data.json").writeText(dataText)
+    }
+
+    fun diary(jda: JDA, text: String, callback: ((Message) -> Unit)? = null) {
+        diaryChannel.toTextChannel(jda)?.sendMessage(text)?.queue(callback)
+    }
+
+    fun diary(jda: JDA, embed: MessageEmbed, callback: ((Message) -> Unit)? = null) {
+        diaryChannel.toTextChannel(jda)?.sendMessage(embed)?.queue(callback)
     }
 
     companion object {

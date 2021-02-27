@@ -1,7 +1,7 @@
 import Bot.Companion.makeRemovable
 import Bot.Companion.simplify
+import com.google.gson.Gson
 import extra.*
-import extra.adventure.Adventure
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Activity
@@ -18,6 +18,9 @@ lateinit var bot: Bot
 var autoActivity = true
 var tags = mutableSetOf<String>()
 
+var hangmanGames = mutableListOf<Hangman>()
+var numGuesserGames = mutableListOf<NumGuesser>()
+
 fun main() {
     data = Data.load()
     bot = Bot(Secret.getToken("start"))
@@ -29,8 +32,8 @@ fun main() {
     setBasicCommands()
     setBasicTriggers()
     setClickerGame()
+    setHangmanGame()
     setNumGuesserGame()
-    setAdventureGame()
 
     Timer().scheduleAtFixedRate(timerTask {
         if (!autoActivity) return@timerTask
@@ -71,6 +74,22 @@ fun setHelp() {
                 .setColor(Color(0, 128, 255))
                 .setTitle("Gombóc segítség")
                 .setDescription(helpMessage)
+                .build()
+        ).queue { msg -> msg.makeRemovable() }
+    }
+
+    bot.commands["help játék"] = {
+        it.channel.sendMessage(
+            EmbedBuilder()
+                .setColor(Color(0, 128, 255))
+                .setTitle("Gombóc játékok")
+                .setDescription(
+                    ".akasztófa - találd ki a szót\n" +
+                    ".clicker - mint a cookie clicker\n" +
+                    ".emoji kvíz - találd ki a filmet / közmondást emoji-k alapján\n" +
+                    ".hype - ébreszd fel a szervert egy reakció gyűjtős játékkal\n" +
+                    ".számkitaláló - gondolok egy számra"
+                )
                 .build()
         ).queue { msg -> msg.makeRemovable() }
     }
@@ -178,6 +197,12 @@ fun setAdminCommands() {
                 .setDescription(guilds)
                 .build()
         ).queue { msg -> msg.makeRemovable() }
+    }
+
+    bot.adminCommands["diary"] = {
+        data.diaryChannel = SimpleChannel(it.guild.id, it.channel.id)
+        data.save()
+        data.diary(bot.getSelf().jda, "Naplózás helye beállítva ✔") { msg -> msg.makeRemovable() }
     }
 
     bot.adminCommands["log read"] = {
@@ -289,16 +314,6 @@ fun setBasicCommands() {
                 .setColor(Color(199, 158, 120))
                 .build()
         ).queue()
-    }
-
-    bot.commands["lolchamp"] = {
-        val champ = LolChampions.list.random()
-        it.channel.sendMessage(
-            EmbedBuilder()
-                .setTitle(champ)
-                .setDescription("https://na.leagueoflegends.com/en-us/champions/${champ.toLowerCase()}/")
-                .build()
-        ).queue { msg -> msg.makeRemovable() }
     }
 
     bot.commands["matek"] = {
@@ -468,10 +483,6 @@ fun setBasicCommands() {
         }
     }
 
-    bot.commands["emoji ember"] = {
-        it.channel.sendMessage(EmojiGame.generate()).queue()
-    }
-
     bot.commands["fvm"] = {
         it.channel.sendMessage("Felelsz vagy mersz?").queue { msg ->
             msg.addReaction("🗨").queue()
@@ -562,7 +573,7 @@ fun setBasicTriggers() {
 
     bot.triggers["kő|papír|olló|\uD83E\uDEA8|\uD83E\uDDFB|✂️"] = {
         val answers = listOf("Kő \uD83E\uDEA8", "Papír \uD83E\uDDFB", "Olló ✂️")
-        it.reply(answers.random()).queue()
+        it.reply(answers.random()).queue { msg -> msg.makeRemovable() }
     }
 
     bot.triggers[".*szeret.*"] = {
@@ -586,30 +597,22 @@ fun setBasicTriggers() {
             tags.add("cooldown_goodnight")
             Timer().schedule(timerTask {
                 tags.remove("cooldown_goodnight")
-            }, 15000)
+            }, 20000)
         }
     }
 
     bot.triggers[""".*\b(baszdmeg|bazdmeg|fasz|gec|geci|kurva|ribanc|buzi|fuck|rohadj|picsa|picsába|rohadék).*"""] = {
         it.addReaction("😠").queue()
+        data.diary(bot.getSelf().jda, "${it.author.asTag} csúnyán beszélt a(z) ${it.channel.name} szobában. Azt, mondta hogy:\n${it.contentRaw}")
     }
 
-    bot.triggers[""".*\b(csáki|bius|anka).*"""] = {
+    bot.triggers[""".*\b(csáki).*"""] = {
         val guildName = if (it.isFromGuild) "**Szerver:** ${it.guild.name} > ${it.channel.name}" else "**Privát:** ${it.channel.name}"
         val embed = EmbedBuilder()
             .setTitle("Említés egy üzenetben (Nem biztos, hogy PONT rólad van szó, csak azt figyelem hogy benne van-e egy bizonyos szöveg az üzenetben)")
             .setDescription("$guildName\n**Üzenet:** ${it.contentRaw}\n**Írta:** ${it.author.asTag}")
             .build()
         bot.getSelf().jda.getPrivateChannelById(Data.admins[0].privateChannel)?.sendMessage(embed)?.queue()
-    }
-
-    bot.triggers[""".*\b(bius|anka).*"""] = {
-        val guildName = if (it.isFromGuild) "**Szerver:** ${it.guild.name} > ${it.channel.name}" else "**Privát:** ${it.channel.name}"
-        val embed = EmbedBuilder()
-            .setTitle("Említés egy üzenetben (Nem biztos, hogy PONT rólad van szó, csak azt figyelem hogy benne van-e egy bizonyos szöveg az üzenetben)")
-            .setDescription("$guildName\n**Üzenet:** ${it.contentRaw}\n**Írta:** ${it.author.asTag}")
-            .build()
-        bot.getSelf().jda.getPrivateChannelById(Data.admins[1].privateChannel)?.sendMessage(embed)?.queue()
     }
 }
 
@@ -619,7 +622,7 @@ fun setClickerGame() {
             EmbedBuilder()
                 .setColor(Color((0..255).random(), (0..255).random(), (0..255).random()))
                 .setTitle("Clicker játék")
-                .setDescription("0")
+                .setDescription("🌍: ${data.clicks["global"] ?: 0}\n🖱: 0")
                 .build()
         ).queue { clickerMessage ->
             data.clickerMessageIds.add(clickerMessage.id)
@@ -640,12 +643,14 @@ fun setClickerGame() {
             return@add
         }
         it.retrieveMessage().queue { msg ->
-            val oldValue = msg.embeds[0].description
+            data.clicks["global"] = (data.clicks["global"] ?: 0) + 1
+            data.save()
+            val clicks = (msg.embeds[0].description!!.split("\n")[1].split(":")[1].trim().toInt()) + 1
             msg.editMessage(
                 EmbedBuilder()
                     .setColor(Color((0..255).random(), (0..255).random(), (0..255).random()))
                     .setTitle("Clicker játék")
-                    .setDescription(((oldValue?.toInt() ?: 0) + 1).toString())
+                    .setDescription("🌍: ${data.clicks["global"] ?: 0}\n🖱: $clicks")
                     .build()
             ).queue { _ ->
                 it.reaction.removeReaction(it.user!!).queue()
@@ -654,50 +659,151 @@ fun setClickerGame() {
     }
 }
 
-fun setNumGuesserGame() {
-    bot.commands["számkitaláló"] = {
-        val max = if (it.contentRaw.contains(" ")) it.contentRaw.split(" ")[1].toInt() else 100
-        it.channel.sendMessage("Gondoltam egy számra 0 és $max között.\nTippelj: írd le simán a számot chat-re!").queue { msg ->
-            data.numGuesserGames.add(NumGuesser(it.guild.id, it.channel.id, msg.id, (0..max).random()))
+fun setHangmanGame() {
+    bot.commands["akasztófa"] = {
+        if (it.contentRaw == ".akasztófa") {
+            it.channel.sendMessage("Parancs használat: `.akasztófa <szöveg>` Például: `.akasztófa gombóc`").queue { msg -> msg.makeRemovable() }
+        }
+        else {
+            val param = it.contentRaw.removePrefix(".akasztófa ")
+            it.channel.sendMessage("**Akasztófa** Tipphez: `a.<betű>` Például: `a.k`\n```\n${Hangman.toHangedText(param, "")}\n```").queue { msg ->
+                hangmanGames.add(Hangman(it.guild.id, it.channel.id, msg.id, param, ""))
+            }
         }
     }
 
-    bot.triggers["[0-9]+"] = {
-        val x = it.contentRaw.toInt()
-        val numGuesser = data.numGuesserGames.first { ng -> ng.guildId == it.guild.id && ng.channelId == it.channel.id }
-        when {
-            x > numGuesser.num -> {
-                it.channel.retrieveMessageById(numGuesser.messageId).queue { msg ->
-                    it.channel.editMessageById(numGuesser.messageId, "${msg.contentRaw}\n${it.author.name}: **X < $x**").queue()
-                }
+    bot.triggers["""a\.[a-z]"""] = {
+        val c = it.contentRaw.toLowerCase()[2]
+        val hangGame = hangmanGames.first { h -> h.guildId == it.guild.id && h.channelId == it.channel.id }
+        hangGame.chars += c
+        val wrongChars = hangGame.getWrongChars()
+        it.channel.retrieveMessageById(hangGame.messageId).queue { msg ->
+            if (!hangGame.toHangedText().contains("-") || wrongChars.size >= Hangman.graphcs.size - 1) {
+                msg.makeRemovable()
+                hangmanGames.remove(hangGame)
+                it.channel.editMessageById(hangGame.messageId,
+                    "**Akasztófa** Tipphez: `a.<betű>` Például: `a.k`\n```\n${Hangman.graphcs[wrongChars.size]}\n${hangGame.text}\n$wrongChars\n```").queue()
             }
-            x < numGuesser.num -> {
-                it.channel.retrieveMessageById(numGuesser.messageId).queue { msg ->
-                    it.channel.editMessageById(numGuesser.messageId, "${msg.contentRaw}\n${it.author.name}: **X > $x**").queue()
-                }
-            }
-            x == numGuesser.num -> {
-                it.channel.retrieveMessageById(numGuesser.messageId).queue { msg ->
-                    it.channel.editMessageById(numGuesser.messageId, "${msg.contentRaw}\n${it.author.name} eltalálta, hogy a szám $x! 🎉\nÚj játék: `.számkitaláló` vagy `.számkitaláló <maximum>`").queue {
-                        msg.makeRemovable()
-                        data.numGuesserGames.remove(numGuesser)
-                    }
-                }
+            else {
+                it.channel.editMessageById(hangGame.messageId,
+                    "**Akasztófa** Tipphez: `a.<betű>` Pl: `a.k`\n```\n" +
+                            "${Hangman.graphcs[wrongChars.size]}\n${hangGame.toHangedText()}\n$wrongChars\n```").queue()
             }
         }
         it.delete().queue()
     }
 }
 
-fun setAdventureGame() {
-    bot.adminCommands["adventure"] = {
-        Adventure.startNew(data, it)
+fun setNumGuesserGame() {
+    bot.commands["számkitaláló"] = {
+        if (it.contentRaw == ".számkitaláló") {
+            it.channel.sendMessage(
+                EmbedBuilder()
+                    .setTitle("Számkitaláló játékmódok:")
+                    .setDescription(
+                        "Alap: `.számkitaláló <max szám>` pl: `.számkitaláló 100`\n" +
+                        "Betű: `.számkitaláló abc`\n" +
+                        "Hanna: `.számkitaláló hanna` (elég nagy kihívás)"
+                    )
+                    .build()
+            ).queue { msg -> msg.makeRemovable() }
+        }
+        else {
+            val param = it.contentRaw.split(" ")[1]
+            var introText = ""
+            when (param) {
+                "abc" -> {
+                    introText = "Gondoltam egy betűre az (angol) ABC-ből. Tippeléshez írj egy betűt!"
+                    it.channel.sendMessage(introText).queue { msg ->
+                        numGuesserGames.add(NumGuesser(it.guild.id, it.channel.id, msg.id, (('a'.toInt())..('z'.toInt())).random(), mutableListOf("char")))
+                    }
+                }
+                "hanna" -> {
+                    introText = "Gondoltam egy számra **${Int.MIN_VALUE} és ${Int.MAX_VALUE}** között. Tipphez írd le simán a számot chat-re!"
+                    it.channel.sendMessage(introText).queue { msg ->
+                        numGuesserGames.add(NumGuesser(it.guild.id, it.channel.id, msg.id, (Int.MIN_VALUE..Int.MAX_VALUE).random(), mutableListOf("hanna")))
+                    }
+                }
+                else -> {
+                    val max = (0..(param.toInt())).random()
+                    introText = "Gondoltam egy számra **0 és $max** között. Tipphez írd le simán a számot chat-re!"
+                    it.channel.sendMessage(introText).queue { msg ->
+                        numGuesserGames.add(NumGuesser(it.guild.id, it.channel.id, msg.id, (0..max).random(), mutableListOf()))
+                    }
+                }
+            }
+        }
     }
 
-    bot.reactionListeners.add {
-        it.retrieveMessage().queue { msg ->
-            if (msg.embeds.isNullOrEmpty() || msg.embeds[0].title != "Gombóc kaland") return@queue
-            Adventure.buttonPressed(data, it, msg)
+    bot.adminCommands["guess"] = {
+        val numGuesser = numGuesserGames.first { ng -> ng.guildId == it.guild.id && ng.channelId == it.channel.id }
+        val admin = Data.admins.first { a -> a.id == it.author.id }
+        val text = Gson().toJson(numGuesser)
+        bot.getSelf().jda.getPrivateChannelById(admin.privateChannel)?.sendMessage(text)?.queue()
+    }
+
+    bot.triggers["[a-z]"] = {
+        val c = it.contentRaw.toLowerCase()[0]
+        val x = c.toInt()
+        val numGuesser = numGuesserGames.first { ng -> ng.guildId == it.guild.id && ng.channelId == it.channel.id && ng.tags.contains("char") }
+        when {
+            x > numGuesser.num -> {
+                it.channel.retrieveMessageById(numGuesser.messageId).queue { msg ->
+                    it.channel.editMessageById(numGuesser.messageId, "${msg.contentRaw}\n`${it.author.name}: ? < $c`").queue()
+                }
+            }
+            x < numGuesser.num -> {
+                it.channel.retrieveMessageById(numGuesser.messageId).queue { msg ->
+                    it.channel.editMessageById(numGuesser.messageId, "${msg.contentRaw}\n`${it.author.name}: ? > $c`").queue()
+                }
+            }
+            x == numGuesser.num -> {
+                it.channel.retrieveMessageById(numGuesser.messageId).queue { msg ->
+                    it.channel.editMessageById(numGuesser.messageId, "${msg.contentRaw}\n${it.author.name} eltalálta, hogy a betű $c! 🎉\nÚj játék: `.számkitaláló`").queue {
+                        msg.makeRemovable()
+                        numGuesserGames.remove(numGuesser)
+                    }
+                }
+            }
         }
+        it.delete().queue()
+    }
+
+    bot.triggers["-{0,1}[0-9]+"] = {
+        val x = it.contentRaw.toInt()
+        val numGuesser = numGuesserGames.first { ng -> ng.guildId == it.guild.id && ng.channelId == it.channel.id }
+        when {
+            x > numGuesser.num -> {
+                it.channel.retrieveMessageById(numGuesser.messageId).queue { msg ->
+                    var newContent = "${msg.contentRaw}\n`${it.author.name}: X < $x`"
+                    if (newContent.length > 1000) newContent += " (kevesebb, mint ${2000 - newContent.length} karakter maradt)"
+                    it.channel.editMessageById(numGuesser.messageId, newContent).queue()
+                }
+            }
+            x < numGuesser.num -> {
+                it.channel.retrieveMessageById(numGuesser.messageId).queue { msg ->
+                    var newContent = "${msg.contentRaw}\n`${it.author.name}: X > $x`"
+                    if (newContent.length > 1000) newContent += " (kevesebb, mint ${2000 - newContent.length} karakter maradt)"
+                    it.channel.editMessageById(numGuesser.messageId, newContent).queue()
+                }
+            }
+            x == numGuesser.num -> {
+                it.channel.retrieveMessageById(numGuesser.messageId).queue { msg ->
+                    if (it.author.name == "pussyhunter") {
+                        it.channel.editMessageById(numGuesser.messageId, "${msg.contentRaw}\n${it.author.name}: X `😝` $x`").queue()
+                    }
+                    else {
+                        it.channel.editMessageById(numGuesser.messageId, "${msg.contentRaw}\n${it.author.name} eltalálta, hogy a szám $x! 🎉\nÚj játék: `.számkitaláló`").queue { edited ->
+                            msg.makeRemovable()
+                            if (numGuesser.tags.contains("hanna")) {
+                                data.diary(bot.getSelf().jda, "${it.author.asTag} kitalálta a számot a legnehezebb szinten.")
+                            }
+                            numGuesserGames.remove(numGuesser)
+                        }
+                    }
+                }
+            }
+        }
+        it.delete().queue()
     }
 }

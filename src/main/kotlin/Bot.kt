@@ -29,6 +29,7 @@ class Bot(token: String) : ListenerAdapter() {
 
     override fun onReady(event: ReadyEvent) {
         self = event.jda.selfUser
+        self.jda.openPrivateChannelById(Data.admins[0].id).queue()
     }
 
     override fun onMessageReceived(event: MessageReceivedEvent) {
@@ -82,6 +83,11 @@ class Bot(token: String) : ListenerAdapter() {
                     (react.isSelf) && react.reactionEmote.emoji == "❌"
                 }
                 if (isRemovable) msg.delete().queue()
+            }
+        }
+        else if (emoji == "📌") {
+            event.retrieveMessage().queue { msg ->
+                msg.removeReaction("❌", self).queue()
             }
         }
         else if (emoji == "\uD83D\uDC94") {
