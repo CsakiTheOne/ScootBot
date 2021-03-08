@@ -24,11 +24,17 @@ class Data() {
     }
 
     fun diary(jda: JDA, text: String, callback: ((Message) -> Unit)? = null) {
-        diaryChannel.toTextChannel(jda)?.sendMessage(text)?.queue(callback)
+        diaryChannel.toTextChannel(jda)?.sendMessage(text)?.queue {
+            it.crosspost().queue()
+            callback?.invoke(it)
+        }
     }
 
     fun diary(jda: JDA, embed: MessageEmbed, callback: ((Message) -> Unit)? = null) {
-        diaryChannel.toTextChannel(jda)?.sendMessage(embed)?.queue(callback)
+        diaryChannel.toTextChannel(jda)?.sendMessage(embed)?.queue {
+            it.crosspost().queue()
+            callback?.invoke(it)
+        }
     }
 
     companion object {

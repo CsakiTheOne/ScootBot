@@ -34,37 +34,43 @@ class Bot(token: String) : ListenerAdapter() {
 
     override fun onMessageReceived(event: MessageReceivedEvent) {
         val msg = event.message
-        val content = msg.contentRaw.replace("<@!", "<@").replace(self.asMention + " ", ".")
-        if (msg.author.isBot) return
+        val content = msg.contentRaw.replace("<@!", "<@")
+            .replace(self.asMention + " ", ".")
+            .removeSurrounding("||")
         if (!msg.isFromGuild) {
             Data.log("Bot", "Private message from ${msg.author.asTag} (Channel id: ${msg.channel.id}): $content")
         }
-        for (aCommand in adminCommands) {
-            if (content.startsWith(prefix + aCommand.key) && Data.admins.any { it.id == msg.author.id }) {
-                Data.log("Bot", "Admin command received: $content Author: ${msg.author.asTag} (${msg.author.id})")
-                aCommand.value(msg)
-                msg.delete().queue()
-                break
-            }
-        }
-        for (command in commands) {
-            if (content.startsWith(prefix + command.key)) {
-                Data.log("Bot", "Command received: $content Author: ${msg.author.asTag} (${msg.author.id})")
-                command.value(msg)
-                msg.delete().queue()
-                break
-            }
-        }
-        for (cc in data.customCommands) {
-            if (content.startsWith(prefix + prefix + cc.command)) {
-                Data.log("Bot", "Custom command received: $content Author: ${msg.author.asTag} (${msg.author.id})")
-                msg.channel.sendMessage(cc.output).queue {
-                    if (cc.isRemovable) it.makeRemovable()
+        if (self.jda.presence.status == OnlineStatus.ONLINE) {
+            for (aCommand in adminCommands) {
+                if (content.startsWith(prefix + aCommand.key) && Data.admins.any { it.id == msg.author.id }) {
+                    Data.log("Bot", "Admin command received: $content Author: ${msg.author.asTag} (${msg.author.id})")
+                    aCommand.value(msg)
+                    msg.delete().queue()
+                    break
                 }
-                msg.delete().queue()
-                break
+            }
+            for (command in commands) {
+                if (content.startsWith(prefix + command.key)) {
+                    msg.channel.sendTyping().queue()
+                    Data.log("Bot", "Command received: $content Author: ${msg.author.asTag} (${msg.author.id})")
+                    command.value(msg)
+                    msg.delete().queue()
+                    break
+                }
+            }
+            for (cc in data.customCommands) {
+                if (content.startsWith(prefix + prefix + cc.command)) {
+                    msg.channel.sendTyping().queue()
+                    Data.log("Bot", "Custom command received: $content Author: ${msg.author.asTag} (${msg.author.id})")
+                    msg.channel.sendMessage(cc.output).queue {
+                        if (cc.isRemovable) it.makeRemovable()
+                    }
+                    msg.delete().queue()
+                    break
+                }
             }
         }
+        if (msg.author.isBot) return
         for (trigger in triggers) {
             if (trigger.key.simplify().toRegex().matches(content.simplify())) {
                 Data.log("Bot", "Trigger found in message: $content Author: ${msg.author.asTag} (${msg.author.id})")
