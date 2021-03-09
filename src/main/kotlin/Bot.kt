@@ -44,8 +44,8 @@ class Bot(token: String) : ListenerAdapter() {
             for (aCommand in adminCommands) {
                 if (content.startsWith(prefix + aCommand.key) && Data.admins.any { it.id == msg.author.id }) {
                     Data.log("Bot", "Admin command received: $content Author: ${msg.author.asTag} (${msg.author.id})")
-                    aCommand.value(msg)
                     msg.delete().queue()
+                    aCommand.value(msg)
                     break
                 }
             }
@@ -53,8 +53,8 @@ class Bot(token: String) : ListenerAdapter() {
                 if (content.startsWith(prefix + command.key)) {
                     msg.channel.sendTyping().queue()
                     Data.log("Bot", "Command received: $content Author: ${msg.author.asTag} (${msg.author.id})")
-                    command.value(msg)
                     msg.delete().queue()
+                    command.value(msg)
                     break
                 }
             }
@@ -62,10 +62,10 @@ class Bot(token: String) : ListenerAdapter() {
                 if (content.startsWith(prefix + prefix + cc.command)) {
                     msg.channel.sendTyping().queue()
                     Data.log("Bot", "Custom command received: $content Author: ${msg.author.asTag} (${msg.author.id})")
+                    msg.delete().queue()
                     msg.channel.sendMessage(cc.output).queue {
                         if (cc.isRemovable) it.makeRemovable()
                     }
-                    msg.delete().queue()
                     break
                 }
             }
