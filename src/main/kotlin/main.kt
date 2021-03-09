@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent
 import java.awt.Color
+import java.io.File
 import java.util.*
 import javax.script.ScriptEngine
 import javax.script.ScriptEngineManager
@@ -460,7 +461,7 @@ fun setBasicCommands() {
     }
 
     bot.commands["repost"] = {
-        it.channel.sendMessage("https://u.photofunia.com/2/results/-/X/-XIyh8J9cHhIsx6l81FdAA_r.jpg").queue()
+        it.channel.sendFile(File("./repost.jpg")).queue { msg -> msg.makeRemovable() }
     }
 
     bot.commands["hype"] = {
