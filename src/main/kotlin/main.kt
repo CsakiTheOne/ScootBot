@@ -70,7 +70,7 @@ fun main() {
 fun setHelp() {
     bot.commands.add(Command("help admin", "") {
         val helpMessage = "**Parancsok (mindegyik elé `${bot.prefix}` vagy szólítsd meg Gombócot):**\n" +
-                bot.commands.filter { c -> c.isAdminOnly }.joinToString { c -> c.head }
+                bot.commands.filter { c -> c.isAdminOnly }.joinToString("\n")
         it.channel.sendMessage(
             EmbedBuilder()
                 .setColor(Color(0, 128, 255))
@@ -80,25 +80,21 @@ fun setHelp() {
         ).queue { msg -> msg.makeRemovable() }
     }.setIsAdminOnly(true))
 
-    bot.commandsOld["help játék"] = {
+    bot.commands.add(Command("help játék", "nézd meg milyen játékokat játszhatsz") {
+        val helpMessage = "**Játékok (mindegyik elé `${bot.prefix}` vagy szólítsd meg Gombócot):**\n" +
+                bot.commands.filter { c -> c.tags.contains(Command.TAG_GAME) }.joinToString("\n")
         it.channel.sendMessage(
             EmbedBuilder()
                 .setColor(Color(0, 128, 255))
                 .setTitle("Gombóc játékok")
-                .setDescription(
-                    ".akasztófa - találd ki a szót\n" +
-                    ".clicker - mint a cookie clicker\n" +
-                    ".emoji kvíz - találd ki a filmet / közmondást emoji-k alapján\n" +
-                    ".hype - ébreszd fel a szervert egy reakció gyűjtős játékkal\n" +
-                    ".számkitaláló - gondolok egy számra"
-                )
+                .setDescription(helpMessage)
                 .build()
         ).queue { msg -> msg.makeRemovable() }
-    }
+    })
 
-    bot.commandsOld["help"] = {
+    bot.commands.add(Command("help", "ÁÁÁÁÁÁÁÁÁ!!!") {
         val helpMessage = "**Parancsok (mindegyik elé `${bot.prefix}` vagy szólítsd meg Gombócot):**\n" +
-                bot.commandsOld.keys.joinToString()
+                bot.commands.filter { c -> !c.isAdminOnly }.joinToString("\n")
         it.channel.sendMessage(
             EmbedBuilder()
                 .setColor(Color(0, 128, 255))
@@ -106,9 +102,9 @@ fun setHelp() {
                 .setDescription(helpMessage)
                 .build()
         ).queue { msg -> msg.makeRemovable() }
-    }
+    })
 
-    bot.commandsOld["custom"] = {
+    bot.commands.add(Command("custom", "saját parancsokat alkothatsz") {
         if (it.contentRaw == ".custom") {
             val helpMessage = "Új parancs: `.custom add <parancs>; [kimenet]; [egyéb beállítások]`\n" +
                     "Törlés: `.custom delete <parancs>`\nBeállítások: minden emoji egy beállítás\n" +
@@ -142,7 +138,7 @@ fun setHelp() {
             data.save()
             it.channel.sendMessage("Parancs törölve ✅").queue { msg -> msg.makeRemovable() }
         }
-    }
+    })
 }
 
 fun setAdminCommands() {
@@ -216,15 +212,15 @@ fun setAdminCommands() {
 }
 
 fun setBasicCommands() {
-    bot.commandsOld["ping"] = {
+    bot.commands.add(Command("ping", "🏓") {
         it.channel.sendMessage(":ping_pong:").queue { msg -> msg.makeRemovable() }
-    }
+    })
 
-    bot.commandsOld["invite"] = {
+    bot.commands.add(Command("invite", "hívj meg a saját szerveredre") {
         it.channel.sendMessage("<https://discord.com/oauth2/authorize?client_id=783672257347715123&scope=bot&permissions=8>").queue { msg -> msg.makeRemovable() }
-    }
+    })
 
-    bot.commandsOld["tagok"] = {
+    bot.commands.add(Command("tagok", "hány ember van ezen a szerveren?") {
         it.guild.loadMembers().onSuccess { members ->
             val csakiStatus = members.firstOrNull { m -> m.id == Data.admins[0].id }?.onlineStatus ?: OnlineStatus.UNKNOWN
             it.channel.sendMessage(
@@ -242,18 +238,18 @@ fun setBasicCommands() {
                     .build()
             ).queue { msg -> msg.makeRemovable() }
         }
-    }
+    })
 
-    bot.commandsOld["mondd"] = {
+    bot.commands.add(Command("mondd", "ki tudsz mondatni velem valamit") {
         if (Data.admins.any { admin -> admin.id == it.author.id }) {
             it.channel.sendMessage(it.contentRaw.removePrefix(".mondd ")).queue()
         }
         else {
             it.channel.sendMessage("*${it.contentRaw.removePrefix(".mondd ")}*").queue()
         }
-    }
+    })
 
-    bot.commandsOld["szavazás"] = {
+    bot.commands.add(Command("szavazás", "én egy demokratikusan megválasztott bot vagyok") {
         if (it.contentRaw == ".szavazás") {
             it.channel.sendMessage(
                 "Szavazás használata: `.szavazás <kérdés>; <emoji> <válasz>; <emoji2> <válasz2>`\n" +
@@ -277,9 +273,9 @@ fun setBasicCommands() {
                 }
             }
         }
-    }
+    })
 
-    bot.commandsOld["szegz"] = {
+    bot.commands.add(Command("szegz", "nagyon romi") {
         val userFrom = it.author.asMention
         val userTo = it.contentRaw.split(' ')[1]
         if (it.textChannel.isNSFW) {
@@ -290,9 +286,9 @@ fun setBasicCommands() {
         else {
             it.channel.sendMessage("$userFrom, menj át egy nsfw szobába $userTo társaddal együtt.").queue()
         }
-    }
+    })
 
-    bot.commandsOld["gift"] = {
+    bot.commands.add(Command("gift", "küldj ajándékot a barátaidnak") {
         it.channel.sendMessage(
             EmbedBuilder()
                 .setTitle("A wild gift appeared", "https://youtu.be/dQw4w9WgXcQ")
@@ -301,9 +297,9 @@ fun setBasicCommands() {
                 .setColor(Color(199, 158, 120))
                 .build()
         ).queue()
-    }
+    })
 
-    bot.commandsOld["matek"] = {
+    bot.commands.add(Command("matek", "írj be egy műveletet és kiszámolom neked") {
         if (it.contentRaw == ".matek") {
             it.channel.sendMessage("Így használd a parancsot: `.matek <művelet>`\nPéldául: `.matek 2 + 2`")
                 .queue { msg -> msg.makeRemovable() }
@@ -322,9 +318,9 @@ fun setBasicCommands() {
             val ans = engine.eval(input) as Number
             it.channel.sendMessage("$inputRaw = $ans").queue { msg -> msg.makeRemovable() }
         }
-    }
+    })
 
-    bot.commandsOld["függvény"] = {
+    bot.commands.add(Command("függvény", "tudok függvényt ábrázolni") {
         if (it.contentRaw == ".függvény") {
             it.channel.sendMessage("Így használd a parancsot: `.függvény <függvény teste>; <tartomány>` " +
                     "Például: `.függvény abs(x - 1) + 2; 5`\n").queue { msg -> msg.makeRemovable() }
@@ -361,9 +357,9 @@ fun setBasicCommands() {
             val ans = f.toString()
             it.channel.sendMessage("f(x) = $inputRaw\n```\n$ans\n$graph\n```").queue { msg -> msg.makeRemovable() }
         }
-    }
+    })
 
-    bot.commandsOld["brainfuck"] = {
+    bot.commands.add(Command("brainfuck", ">++++++[<++++++++>-]<.") {
         it.channel.sendMessage(
             EmbedBuilder()
                 .setTitle("Brainfuck")
@@ -374,9 +370,9 @@ fun setBasicCommands() {
                 )
                 .build()
         ).queue { msg -> msg.makeRemovable() }
-    }
+    })
 
-    bot.commandsOld["js"] = {
+    bot.commands.add(Command("js", "tudok futtatni JavaScript kódot") {
         val engine: ScriptEngine = ScriptEngineManager().getEngineByName("JavaScript")
         val input = it.contentRaw.removePrefix(".js").replace("```js", "")
             .replace("`", "").replace("let", "var").trim()
@@ -392,9 +388,9 @@ fun setBasicCommands() {
                 .setDescription("```js\n$input\n```\n`> $ans`")
                 .build()
         ).queue { msg -> msg.makeRemovable() }
-    }
+    })
 
-    bot.commandsOld["vibe"] = {
+    bot.commands.add(Command("vibe", "vibe-olunk együtt voice-ban?") {
         if (it.contentRaw.contains("end")) {
             it.guild.audioManager.closeAudioConnection()
         }
@@ -408,9 +404,9 @@ fun setBasicCommands() {
                 lastVibeCommand = Calendar.getInstance().time.toString()
             }
         }
-    }
+    })
 
-    bot.commandsOld["emoji kvíz"] = {
+    bot.commands.add(Command("emoji kvíz", "találd ki, hogy mit jelentenek az emoji-k") {
         val questions = mapOf(
             "Közmondás: 👀🐮🆕🚪" to "Néz, mint borjú az új kapura.", "Közmondás: 🧠⚖💪" to "Többet ésszel, mint erővel.",
             "Közmondás: ❌🏡😺🎼🐭🐭" to "Ha nincs otthon a macska, cincognak az egerek.",
@@ -456,13 +452,13 @@ fun setBasicCommands() {
         else {
             sendEmojiQuiz()
         }
-    }
+    }.addTag(Command.TAG_GAME))
 
-    bot.commandsOld["repost"] = {
+    bot.commands.add(Command("repost", "vót má'") {
         it.channel.sendFile(File("./repost.jpg")).queue { msg -> msg.makeRemovable() }
-    }
+    })
 
-    bot.commandsOld["hype"] = {
+    bot.commands.add(Command("hype", "ébreszd fel a szervert reakció gyűjtős játékkal") {
         if (it.contentRaw == ".hype") {
             it.channel.sendMessage("A parancs használata: `.hype <szám>`").queue { msg -> msg.makeRemovable() }
         }
@@ -492,15 +488,11 @@ fun setBasicCommands() {
                 it.channel.sendMessage("Hype vége! 🎉 ||Kell egy kis idő a reakciók összeszámolásához, de szép volt!||").queue()
             }, (max * 3 * 1000).toLong())
         }
-    }
+    }.addTag(Command.TAG_GAME))
 
-    bot.commandsOld["insta"] = {
-        it.channel.sendMessage("Az instám: @csicskagombocek").queue { msg -> msg.makeRemovable() }
-    }
-
-    bot.commandsOld["fejlesztő"] = {
+    bot.commands.add(Command("fejlesztő", "ha érdekel ki alkotott") {
         it.channel.sendMessage("A készítőm: **@CsakiTheOne#8589** De sokan segítettek jobbá válni ❤").queue()
-    }
+    })
 }
 
 fun setBasicTriggers() {
@@ -572,7 +564,7 @@ fun setBasicTriggers() {
 }
 
 fun setClickerGame() {
-    bot.commandsOld["clicker"] = {
+    bot.commands.add(Command("clicker", "mint a cookie clicker") {
         it.channel.sendMessage(
             EmbedBuilder()
                 .setColor(Color((0..255).random(), (0..255).random(), (0..255).random()))
@@ -585,7 +577,7 @@ fun setClickerGame() {
             clickerMessage.addReaction("\uD83D\uDDB1").queue()
             clickerMessage.makeRemovable()
         }
-    }
+    }.addTag(Command.TAG_GAME))
 
     bot.reactionListeners.add {
         if (!data.clickerMessageIds.contains(it.messageId)) return@add
@@ -615,7 +607,7 @@ fun setClickerGame() {
 }
 
 fun setHangmanGame() {
-    bot.commandsOld["akasztófa"] = {
+    bot.commands.add(Command("akasztófa", "G--bóc") {
         if (it.contentRaw == ".akasztófa") {
             it.channel.sendMessage("Parancs használat: `.akasztófa ||<szöveg>||` Például: `.akasztófa ||gombóc||`").queue { msg -> msg.makeRemovable() }
         }
@@ -630,7 +622,7 @@ fun setHangmanGame() {
                 }
             }
         }
-    }
+    }.addTag(Command.TAG_GAME))
 
     bot.triggers["""a\.[a-z]"""] = {
         val c = it.contentRaw.toLowerCase()[2]
@@ -646,7 +638,7 @@ fun setHangmanGame() {
 }
 
 fun setNumGuesserGame() {
-    bot.commandsOld["számkitaláló"] = {
+    bot.commands.add(Command("számkitaláló", "gondolok egy számra") {
         if (it.contentRaw == ".számkitaláló") {
             it.channel.sendMessage(
                 EmbedBuilder()
@@ -684,7 +676,7 @@ fun setNumGuesserGame() {
                 }
             }
         }
-    }
+    }.addTag(Command.TAG_GAME))
 
     bot.triggers["[a-z]"] = {
         val c = it.contentRaw.toLowerCase()[0]
