@@ -69,7 +69,7 @@ fun main() {
 
 fun setHelp() {
     bot.commands.add(Command("help admin", "") {
-        val helpMessage = "**Parancsok (mindegyik elé `${bot.prefix}` vagy szólítsd meg Gombócot):**\n" +
+        val helpMessage = "**Parancsok (mindegyik elé `${Data.prefix}` vagy szólítsd meg Gombócot):**\n" +
                 bot.commands.filter { c -> c.isAdminOnly }.joinToString("\n")
         it.channel.sendMessage(
             EmbedBuilder()
@@ -81,7 +81,7 @@ fun setHelp() {
     }.setIsAdminOnly(true))
 
     bot.commands.add(Command("help játék", "nézd meg milyen játékokat játszhatsz") {
-        val helpMessage = "**Játékok (mindegyik elé `${bot.prefix}` vagy szólítsd meg Gombócot):**\n" +
+        val helpMessage = "**Játékok (mindegyik elé `${Data.prefix}` vagy szólítsd meg Gombócot):**\n" +
                 bot.commands.filter { c -> c.tags.contains(Command.TAG_GAME) }.joinToString("\n")
         it.channel.sendMessage(
             EmbedBuilder()
@@ -93,7 +93,7 @@ fun setHelp() {
     })
 
     bot.commands.add(Command("help", "ÁÁÁÁÁÁÁÁÁ!!!") {
-        val helpMessage = "**Parancsok (mindegyik elé `${bot.prefix}` vagy szólítsd meg Gombócot):**\n" +
+        val helpMessage = "**Parancsok (mindegyik elé `${Data.prefix}` vagy szólítsd meg Gombócot):**\n" +
                 bot.commands.filter { c -> !c.isAdminOnly }.joinToString("\n")
         it.channel.sendMessage(
             EmbedBuilder()
@@ -213,7 +213,8 @@ fun setAdminCommands() {
 
 fun setBasicCommands() {
     bot.commands.add(Command("ping", "🏓") {
-        it.channel.sendMessage(":ping_pong:").queue { msg -> msg.makeRemovable() }
+        it.channel.sendMessage(":ping_pong: ${it.id}").queue { msg -> msg.makeRemovable() }
+        throw Exception("Test exception to trace path.")
     })
 
     bot.commands.add(Command("invite", "hívj meg a saját szerveredre") {
@@ -278,15 +279,10 @@ fun setBasicCommands() {
     bot.commands.add(Command("szegz", "nagyon romi") {
         val userFrom = it.author.asMention
         val userTo = it.contentRaw.split(' ')[1]
-        if (it.textChannel.isNSFW) {
-            it.channel.sendMessage("$userFrom megszegzeli őt: $userTo").queue { msg ->
-                msg.addReaction(listOf("❤️", "\uD83D\uDE0F", "\uD83D\uDE1C", "\uD83D\uDE2E").random()).queue()
-            }
+        it.channel.sendMessage("$userFrom megszegzeli őt: $userTo").queue { msg ->
+            msg.addReaction(listOf("❤️", "\uD83D\uDE0F", "\uD83D\uDE1C", "\uD83D\uDE2E").random()).queue()
         }
-        else {
-            it.channel.sendMessage("$userFrom, menj át egy nsfw szobába $userTo társaddal együtt.").queue()
-        }
-    })
+    }.setIsNSFW(true))
 
     bot.commands.add(Command("gift", "küldj ajándékot a barátaidnak") {
         it.channel.sendMessage(

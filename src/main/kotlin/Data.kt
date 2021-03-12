@@ -38,6 +38,8 @@ class Data() {
     }
 
     companion object {
+        val prefix = "."
+
         val admins = listOf(
             Admin("Csáki", "259610472729280513", "783680267155406868"),
             Admin("Anka", "427127654735413258", "809843289150718042"),

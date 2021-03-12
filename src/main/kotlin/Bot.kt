@@ -8,7 +8,6 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.requests.GatewayIntent
 
 class Bot(token: String) : ListenerAdapter() {
-    var prefix = "."
     val commands = mutableListOf<Command>()
     val triggers = mutableMapOf<String, (msg: Message) -> Unit>()
     val reactionListeners = mutableListOf<(e: MessageReactionAddEvent) -> Unit>()
@@ -40,22 +39,20 @@ class Bot(token: String) : ListenerAdapter() {
             Data.log("Bot", "Private message from ${msg.author.asTag} (Channel id: ${msg.channel.id}): $content")
         }
         if (self.jda.presence.status == OnlineStatus.ONLINE) {
-            if (Data.admins.any { it.id == msg.author.id } && commands.filter { c -> c.isAdminOnly }.any { c -> content.startsWith(prefix + c.head) }) {
-                val command = commands.filter { c -> c.isAdminOnly }.first { c -> content.startsWith(prefix + c.head) }
-                Data.log("Bot", "Admin command received: $content Author: ${msg.author.asTag} (${msg.author.id})")
+            if (Data.admins.any { it.id == msg.author.id } && commands.filter { c -> c.isAdminOnly }.any { c -> c.isThisCommand(content) }) {
+                val command = commands.filter { c -> c.isAdminOnly }.first { c -> c.isThisCommand(content) }
                 if (msg.isFromGuild) msg.delete().queue()
-                command.action(msg)
+                command.run(msg)
                 return
             }
-            if (commands.filter { c -> !c.isAdminOnly }.any { c -> content.startsWith(prefix + c.head) }) {
-                val command = commands.filter { c -> !c.isAdminOnly }.first { c -> content.startsWith(prefix + c.head) }
-                Data.log("Bot", "Command received: $content Author: ${msg.author.asTag} (${msg.author.id})")
+            if (commands.filter { c -> !c.isAdminOnly }.any { c -> c.isThisCommand(content) }) {
+                val command = commands.filter { c -> !c.isAdminOnly }.first { c -> c.isThisCommand(content) }
                 if (msg.isFromGuild) msg.delete().queue()
-                command.action(msg)
+                command.run(msg)
                 return
             }
             for (cc in data.customCommands) {
-                if (content.startsWith(prefix + prefix + cc.command)) {
+                if (content.startsWith(Data.prefix + Data.prefix + cc.command)) {
                     msg.channel.sendTyping().queue()
                     Data.log("Bot", "Custom command received: $content Author: ${msg.author.asTag} (${msg.author.id})")
                     if (msg.isFromGuild) msg.delete().queue()
