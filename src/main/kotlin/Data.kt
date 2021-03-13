@@ -1,5 +1,6 @@
 import com.google.gson.Gson
 import extra.CustomCommand
+import extra.Hangman
 import extra.NumGuesser
 import extra.SimpleChannel
 import net.dv8tion.jda.api.JDA
@@ -16,6 +17,14 @@ class Data() {
     var customCommands = mutableListOf<CustomCommand>()
     var clickerMessageIds = mutableSetOf<String>()
     var clicks = mutableMapOf<String, Int>()
+    var hangmanStats = mutableListOf<Hangman.PlayerStats>()
+
+    fun addHangmanStat(stat: Hangman.PlayerStats) {
+        if (hangmanStats.any { s -> s.playerId == stat.playerId }) {
+            hangmanStats.first { s -> s.playerId == stat.playerId }.add(stat)
+        }
+        else hangmanStats.add(stat)
+    }
 
     fun save() {
         val gson = Gson()
@@ -46,24 +55,25 @@ class Data() {
             Admin("hopelight", "521357031391756291", "818914164550533130"),
         )
 
+        var log = ""
+
         fun log(sender: String, message: String) {
-            File("./log.txt").appendText("${LocalDateTime.now().format(DateTimeFormatter.ofPattern("YYYY. MM. DD. HH:mm.ss"))} [${sender.toUpperCase()}]: $message\n")
+            log += "${LocalDateTime.now().format(DateTimeFormatter.ofPattern("YYYY. MM. DD. HH:mm.ss"))} [${sender.toUpperCase()}]: $message\n"
         }
 
         fun logRead() : String {
-            val logs = File("./log.txt").readLines()
-            var logText = logs.joinToString("\n")
             var startIndex = 0
-            while (logText.length > 1900) {
+            val logs = log.split("\n")
+            while (log.length > 1900) {
                 startIndex++
-                logText = logs.subList(startIndex, logs.size - 1).joinToString("\n")
+                log = logs.subList(startIndex, logs.size - 1).joinToString("\n")
             }
-            return logText
+            return log
 
         }
 
         fun logClear() {
-            File("./log.txt").delete()
+            log = ""
         }
 
         fun load() : Data {

@@ -3,10 +3,9 @@ package extra
 import Bot.Companion.makeRemovable
 import Data
 import net.dv8tion.jda.api.JDA
-import net.dv8tion.jda.api.entities.MessageChannel
 
 class Hangman(
-    val authorTag: String,
+    val authorId: String,
     val guildId: String,
     val channelId: String,
     var messageId: String,
@@ -22,11 +21,16 @@ class Hangman(
     }
 
     fun sendMessage(jda: JDA, data: Data) {
+        val author = jda.getUserById(authorId)
+        val playerNames = mutableListOf<String>()
+        for (player in players) {
+            playerNames.add(jda.getUserById(player)!!.asTag)
+        }
         val channel = jda.getTextChannelById(channelId)!!
         channel.deleteMessageById(messageId).queue()
         val textPartHelp = if (getIsGameEnded() != 0) "" else " Tipphez: `a.<betű>` Pl: `a.k`"
-        val textPartPlayers = if (getIsGameEnded() != 0) "\nJátékosok: ${players.joinToString()}" else ""
-        val messageText = "**Akasztófa ($authorTag)**$textPartHelp\n```\n" +
+        val textPartPlayers = if (getIsGameEnded() != 0) "\nJátékosok: ${playerNames.joinToString()}" else ""
+        val messageText = "**Akasztófa (${author?.asTag})**$textPartHelp\n```\n" +
                 "${graphcs[getWrongChars().size]}\n${toHangedText()}\n${getWrongChars()}\n```$textPartPlayers"
         channel.sendMessage(messageText).queue { msg ->
             messageId = msg.id
@@ -35,7 +39,7 @@ class Hangman(
             }
         }
         if (getIsGameEnded() == 2) {
-            data.diary(jda, "```\n${graphcs.last()}\n$text\n```\n$textPartPlayers")
+            data.diary(jda, "${author?.asTag}```\n${graphcs.last()}\n$text\n```$textPartPlayers")
         }
     }
 
@@ -113,5 +117,26 @@ class Hangman(
                     "| / \\\n" +
                     "I___"
         )
+    }
+
+    class PlayerStats(
+        val playerId: String,
+        var games: Int = 0,
+        var wins: Int = 0,
+        var words: MutableList<String> = mutableListOf(),
+        var hangs: Int = 0,
+    ) {
+        fun add(stat: PlayerStats) {
+            games += stat.games
+            wins += stat.wins
+            words.addAll(stat.words)
+            hangs += stat.hangs
+        }
+
+        override fun toString(): String {
+            var text = "Játékok: $games, Nyert: $wins, Szavak: ${words.size}, Akasztások: $hangs"
+            if (words.isNotEmpty()) text += ", Random szó: ${words.random()}"
+            return text
+        }
     }
 }
