@@ -110,7 +110,13 @@ class Hangman(
                     "| /|\\\n" +
                     "| /\n" +
                     "I___",
-            "____\n" +
+            "____ Utolsó esély\n" +
+                    "|  |\n" +
+                    "|  😫\n" +
+                    "| /|\\\n" +
+                    "| / \\\n" +
+                    "I___",
+            "____ R.I.P.\n" +
                     "|  |\n" +
                     "|  💀\n" +
                     "| /|\\\n" +
@@ -134,8 +140,8 @@ class Hangman(
         }
 
         override fun toString(): String {
-            var text = "Játékok: $games, Nyert: $wins, Szavak: ${words.size}, Akasztások: $hangs"
-            if (words.isNotEmpty()) text += ", Random szó: ${words.random()}"
+            var text = "🎮$wins/$games, 📕${words.size}, 💀$hangs"
+            if (words.isNotEmpty()) text += ", 🎲${words.random()}"
             return text
         }
     }

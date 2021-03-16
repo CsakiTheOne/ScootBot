@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.entities.Message
+import net.dv8tion.jda.api.entities.VoiceChannel
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent
 import java.awt.Color
 import java.io.File
@@ -64,7 +65,17 @@ fun main() {
         )
         bot.getSelf().jda.presence.activity = activities.random()
         Data.log("Activity manager", bot.getSelf().jda.presence.activity.toString())
-    }, 3000L, 1000 * 60 * 5)
+
+        pingMinecraftServer()
+    }, 3000L, (1000 * 60 * 5).toLong())
+}
+
+fun pingMinecraftServer() {
+    val minecraftServer = Pinger.ping("192.168.0.74")
+    val time = "${Calendar.getInstance()[Calendar.HOUR_OF_DAY]}:${Calendar.getInstance()[Calendar.MINUTE]}"
+    bot.getSelf().jda.getGuildChannelById("820966007567941672")?.manager?.setName(
+        if (minecraftServer.isOnline()) "MC 🟢 ${minecraftServer.players.online} ($time)" else "MC offline ($time)"
+    )?.queue()
 }
 
 fun setHelp() {
@@ -108,7 +119,8 @@ fun setHelp() {
         if (it.contentRaw == ".custom") {
             val helpMessage = "Új parancs: `.custom add <parancs>; [kimenet]; [egyéb beállítások]`\n" +
                     "Törlés: `.custom delete <parancs>`\nBeállítások: minden emoji egy beállítás\n" +
-                    "❌: törölhető üzenet\n\n${data.customCommands.map { c -> c.command }.sorted().joinToString()}\n" +
+                    "❌: törölhető üzenet\n\n${data.customCommands.map { c -> c.command
+                    }.sorted().joinToString()}\n" +
                     "**A saját parancsok prefixe:** `..`"
             it.channel.sendMessage(
                 EmbedBuilder()
@@ -213,8 +225,8 @@ fun setAdminCommands() {
 
 fun setBasicCommands() {
     bot.commands.add(Command("ping", "🏓") {
-        it.channel.sendMessage(":ping_pong: ${it.id}").queue { msg -> msg.makeRemovable() }
-        throw Exception("Test exception to trace path.")
+        it.channel.sendMessage(":ping_pong:").queue { msg -> msg.makeRemovable() }
+        pingMinecraftServer()
     })
 
     bot.commands.add(Command("invite", "hívj meg a saját szerveredre") {
@@ -293,6 +305,20 @@ fun setBasicCommands() {
                 .setColor(Color(199, 158, 120))
                 .build()
         ).queue()
+    })
+
+    bot.commands.add(Command("mesék", "pár jó mese, amit érdemes nézni") {
+        it.channel.sendMessage(
+            EmbedBuilder()
+                .setTitle("Mesék")
+                .setDescription("Pár jó mese, amit érdemes nézni.")
+                .addField("Alpha Betas", "On YouTube from VanossGaming", true)
+                .addField("Disenchantment", "Netflix", true)
+                .addField("Final Space", "Netflix", true)
+                .addField("Helluva Boss", "On YouTube from Vivziepop", true)
+                .addField("Sonic Boom", "On YouTube", true)
+                .build()
+        ).queue { msg -> msg.makeRemovable() }
     })
 
     bot.commands.add(Command("matek", "írj be egy műveletet és kiszámolom neked") {
@@ -604,13 +630,18 @@ fun setClickerGame() {
 
 fun setHangmanGame() {
     bot.commands.add(Command("akasztófa", "G--bóc") {
-        if (it.contentRaw == ".akasztófa") {
+        if (it.author.id == "285051758709833729") {
+            it.channel.sendMessage("Nem indíthatsz akasztófa játékot Martin.").queue { msg -> msg.makeRemovable() }
+        }
+        else if (it.contentRaw == ".akasztófa") {
             it.channel.sendMessage("Parancs használat: `.akasztófa ||<szöveg>||` Például: `.akasztófa ||gombóc||`").queue { msg -> msg.makeRemovable() }
         }
         else if (it.contentRaw.startsWith(".akasztófa stat")) {
-            val embed = EmbedBuilder().setTitle("Akasztófa statisztikák (2021. 03. 13. óta)")
+            val embed = EmbedBuilder()
+                .setTitle("Akasztófa statisztikák (2021. 03. 13. óta)")
+                .setDescription("🎮win/játék, 📕szavak, 💀akasztások, 🎲random szó")
             for (stat in data.hangmanStats) {
-                embed.addField(bot.getSelf().jda.getUserById(stat.playerId)?.asTag, stat.toString(), true)
+                embed.addField(bot.getSelf().jda.getUserById(stat.playerId)?.asTag ?: "Ismeretlen játékos", stat.toString(), true)
             }
             it.channel.sendMessage(embed.build()).queue { msg -> msg.makeRemovable() }
         }
@@ -628,23 +659,28 @@ fun setHangmanGame() {
     }.addTag(Command.TAG_GAME))
 
     bot.triggers["""a\.[a-z]"""] = {
-        val c = it.contentRaw.toLowerCase()[2]
-        val hangGame = hangmanGames.first { h -> h.guildId == it.guild.id && h.channelId == it.channel.id }
-        hangGame.players.add(it.author.id)
-        hangGame.chars += c
-        hangGame.sendMessage(bot.getSelf().jda, data)
-        if (hangGame.getIsGameEnded() != 0) {
-            data.addHangmanStat(Hangman.PlayerStats(hangGame.authorId, words = mutableListOf(hangGame.text)))
-            for (player in hangGame.players) {
-                data.addHangmanStat(Hangman.PlayerStats(player, 1, if (hangGame.getIsGameEnded() == 1) 1 else 0))
-            }
-            if (hangGame.getIsGameEnded() == 2) {
-                data.addHangmanStat(Hangman.PlayerStats(hangGame.authorId, hangs = 1))
-            }
-            hangmanGames.remove(hangGame)
-            data.save()
+        if (it.author.id == "285051758709833729") {
+            it.channel.sendMessage("Nem játszhatsz akasztófa játékot Martin.").queue { msg -> msg.makeRemovable() }
         }
-        it.delete().queue()
+        else {
+            val c = it.contentRaw.toLowerCase()[2]
+            val hangGame = hangmanGames.first { h -> h.guildId == it.guild.id && h.channelId == it.channel.id }
+            hangGame.players.add(it.author.id)
+            if (!hangGame.chars.contains(c)) hangGame.chars += c
+            hangGame.sendMessage(bot.getSelf().jda, data)
+            if (hangGame.getIsGameEnded() != 0) {
+                data.addHangmanStat(Hangman.PlayerStats(hangGame.authorId, words = mutableListOf(hangGame.text)))
+                for (player in hangGame.players) {
+                    data.addHangmanStat(Hangman.PlayerStats(player, 1, if (hangGame.getIsGameEnded() == 1) 1 else 0))
+                }
+                if (hangGame.getIsGameEnded() == 2) {
+                    data.addHangmanStat(Hangman.PlayerStats(hangGame.authorId, hangs = 1))
+                }
+                hangmanGames.remove(hangGame)
+                data.save()
+            }
+            it.delete().queue()
+        }
     }
 }
 
