@@ -475,6 +475,10 @@ fun setBasicCommands() {
         }
     }.addTag(Command.TAG_GAME))
 
+    bot.commands.add(Command("f", "press :regional_indicator_f: to pay respect") {
+        it.channel.sendFile(File("./f.png")).queue { msg -> msg.makeRemovable() }
+    })
+
     bot.commands.add(Command("repost", "vót má'") {
         it.channel.sendFile(File("./repost.jpg")).queue { msg -> msg.makeRemovable() }
     })
