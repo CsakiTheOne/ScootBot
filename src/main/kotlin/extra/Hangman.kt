@@ -27,19 +27,20 @@ class Hangman(
             playerNames.add(jda.getUserById(player)!!.asTag)
         }
         val channel = jda.getTextChannelById(channelId)!!
-        channel.deleteMessageById(messageId).queue()
-        val textPartHelp = if (getIsGameEnded() != 0) "" else " Tipphez: `a.<betű>` Pl: `a.k`"
-        val textPartPlayers = if (getIsGameEnded() != 0) "\nJátékosok: ${playerNames.joinToString()}" else ""
-        val messageText = "**Akasztófa (${author?.asTag})**$textPartHelp\n```\n" +
-                "${graphcs[getWrongChars().size]}\n${toHangedText()}\n${getWrongChars()}\n```$textPartPlayers"
-        channel.sendMessage(messageText).queue { msg ->
-            messageId = msg.id
-            if (getIsGameEnded() != 0) {
-                msg.makeRemovable()
+        channel.deleteMessageById(messageId).queue { _ ->
+            val textPartHelp = if (getIsGameEnded() != 0) "" else " Tipphez: `a.<betű>` Pl: `a.k`"
+            val textPartPlayers = if (getIsGameEnded() != 0) "\nJátékosok: ${playerNames.joinToString()}" else ""
+            val messageText = "**Akasztófa (${author?.asTag})**$textPartHelp\n```\n" +
+                    "${graphcs[getWrongChars().size]}\n${toHangedText()}\n${getWrongChars()}\n```$textPartPlayers"
+            channel.sendMessage(messageText).queue { msg ->
+                messageId = msg.id
+                if (getIsGameEnded() != 0) {
+                    msg.makeRemovable()
+                }
             }
-        }
-        if (getIsGameEnded() == 2) {
-            data.diary(jda, "${author?.asTag}```\n${graphcs.last()}\n$text\n```$textPartPlayers")
+            if (getIsGameEnded() == 2) {
+                data.diary(jda, "${author?.asTag}```\n${graphcs.last()}\n$text\n```$textPartPlayers")
+            }
         }
     }
 
@@ -141,7 +142,7 @@ class Hangman(
 
         override fun toString(): String {
             var text = "🎮$wins/$games, 📕${words.size}, 💀$hangs"
-            if (words.isNotEmpty()) text += ", 🎲${words.random()}"
+            if (words.isNotEmpty()) text += ", ${words.random()}"
             return text
         }
     }

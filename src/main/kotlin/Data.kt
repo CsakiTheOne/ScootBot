@@ -17,7 +17,9 @@ class Data() {
     var customCommands = mutableListOf<CustomCommand>()
     var clickerMessageIds = mutableSetOf<String>()
     var clicks = mutableMapOf<String, Int>()
+    var hangmanGames = mutableListOf<Hangman>()
     var hangmanStats = mutableListOf<Hangman.PlayerStats>()
+    var numGuesserGames = mutableListOf<NumGuesser>()
 
     fun addHangmanStat(stat: Hangman.PlayerStats) {
         if (hangmanStats.any { s -> s.playerId == stat.playerId }) {
