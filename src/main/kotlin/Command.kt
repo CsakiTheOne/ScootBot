@@ -4,7 +4,13 @@ import net.dv8tion.jda.api.entities.Message
 class Command(val head: String, val description: String, private val action: (msg: Message) -> Unit) {
     var isAdminOnly: Boolean = false
     var isNSFW: Boolean = false
-    var tags: MutableList<String> = mutableListOf()
+    var isTrigger: Boolean = false
+    var doIgnoreCase: Boolean = false
+    var tags: MutableSet<String> = mutableSetOf()
+
+    fun createTags() {
+        if (!isAdminOnly && !isTrigger) tags.add(TAG_BASIC)
+    }
 
     fun run(msg: Message) : Boolean {
         if (isAdminOnly && !Data.admins.any { a -> a.id == msg.author.id }) {
@@ -30,13 +36,26 @@ class Command(val head: String, val description: String, private val action: (ms
         return this
     }
 
+    fun setIsTrigger(value: Boolean) : Command {
+        isTrigger = value
+        if (value) doIgnoreCase = true
+        return this
+    }
+
+    fun setIgnoreCase(value: Boolean) : Command {
+        doIgnoreCase = value
+        return this
+    }
+
     fun addTag(value: String) : Command {
         tags.add(value)
         return this
     }
 
     fun isThisCommand(text: String) : Boolean {
-        return text.startsWith("${Data.prefix}$head")
+        val input = if (doIgnoreCase) text.toLowerCase() else text
+        return if (isTrigger) head.toRegex().matches(input)
+        else input.startsWith("${Data.prefix}$head")
     }
 
     override fun toString(): String {
@@ -44,6 +63,7 @@ class Command(val head: String, val description: String, private val action: (ms
     }
 
     companion object {
+        val TAG_BASIC = "basic"
         val TAG_GAME = "game"
     }
 }

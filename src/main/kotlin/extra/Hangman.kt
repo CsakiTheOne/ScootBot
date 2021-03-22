@@ -3,13 +3,16 @@ package extra
 import Bot.Companion.makeRemovable
 import Data
 import net.dv8tion.jda.api.JDA
+import net.dv8tion.jda.api.entities.MessageChannel
+import net.dv8tion.jda.api.entities.TextChannel
 
 class Hangman(
     val authorId: String,
     val guildId: String,
     val channelId: String,
-    var messageId: String,
     val text: String,
+    val modifiers: String,
+    var messageId: String,
     var chars: String,
 ) {
     var players = mutableSetOf<String>()
@@ -20,28 +23,36 @@ class Hangman(
         else 0
     }
 
-    fun sendMessage(jda: JDA, data: Data) {
+    fun sendMessage(jda: JDA, data: Data, channel: MessageChannel) {
         val author = jda.getUserById(authorId)
         val playerNames = mutableListOf<String>()
         for (player in players) {
             playerNames.add(jda.getUserById(player)!!.asTag)
         }
-        val channel = jda.getTextChannelById(channelId)!!
-        channel.deleteMessageById(messageId).queue { _ ->
-            val textPartHelp = if (getIsGameEnded() != 0) "" else " Tipphez: `a.<betű>` Pl: `a.k`"
+        fun sendNext() {
+            val textPartHelp = if (getIsGameEnded() != 0) "" else " Tipp: `a.<betű>` Pl: `a.k` Modok: $modifiers"
+            var modHelp = ""
+            if (getIsGameEnded() == 0 && modifiers.contains("❓")) modHelp += "Segítség: a.? -2 hibalehetőség 1 betűért cserébe. "
+            val g = if (getWrongChars().size >= graphcs.size) graphcs.last() else graphcs[getWrongChars().size]
             val textPartPlayers = if (getIsGameEnded() != 0) "\nJátékosok: ${playerNames.joinToString()}" else ""
             val messageText = "**Akasztófa (${author?.asTag})**$textPartHelp\n```\n" +
-                    "${graphcs[getWrongChars().size]}\n${toHangedText()}\n${getWrongChars()}\n```$textPartPlayers"
+                    "$modHelp$g\n${toHangedText()}\n❤${graphcs.size - getWrongChars().size - 1} ${getWrongChars()}\n" +
+                    "```$textPartPlayers"
             channel.sendMessage(messageText).queue { msg ->
                 messageId = msg.id
-                if (getIsGameEnded() != 0) {
-                    msg.makeRemovable()
-                }
+                if (getIsGameEnded() != 0) msg.makeRemovable()
             }
             if (getIsGameEnded() == 2) {
                 data.diary(jda, "${author?.asTag}```\n${graphcs.last()}\n$text\n```$textPartPlayers")
             }
         }
+        channel.retrieveMessageById(messageId).queue({
+            channel.deleteMessageById(messageId).queue {
+                sendNext()
+            }
+        }, {
+            sendNext()
+        })
     }
 
     fun toHangedText(forceFormat: Boolean = false) : String {
@@ -52,9 +63,7 @@ class Hangman(
     fun getWrongChars() : List<Char> {
         val wrong = mutableListOf<Char>()
         for (c in chars) {
-            if (!text.contains(c)) {
-                wrong.add(c)
-            }
+            if (!text.toLowerCase().contains(c) || c == '❓') wrong.add(c)
         }
         return wrong
     }

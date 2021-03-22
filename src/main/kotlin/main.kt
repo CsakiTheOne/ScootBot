@@ -20,8 +20,6 @@ lateinit var bot: Bot
 var autoActivity = true
 var tags = mutableSetOf<String>()
 
-var lastVibeCommand = "még senki sem kérte"
-
 fun main() {
     data = Data.load()
     bot = Bot(Secret.getToken("start"))
@@ -35,6 +33,10 @@ fun main() {
     setClickerGame()
     setHangmanGame()
     setNumGuesserGame()
+
+    for (cmd in bot.commands) {
+        cmd.createTags()
+    }
 
     Timer().scheduleAtFixedRate(timerTask {
         if (!autoActivity) return@timerTask
@@ -64,16 +66,8 @@ fun main() {
         bot.getSelf().jda.presence.activity = activities.random()
         Data.log("Activity manager", bot.getSelf().jda.presence.activity.toString())
 
-        pingMinecraftServer()
+        Pinger.pingMinecraftServer(bot.getSelf().jda)
     }, 3000L, (1000 * 60 * 5).toLong())
-}
-
-fun pingMinecraftServer() {
-    val minecraftServer = Pinger.ping("192.168.0.74")
-    val time = "${Calendar.getInstance()[Calendar.HOUR_OF_DAY]}:${Calendar.getInstance()[Calendar.MINUTE]}"
-    bot.getSelf().jda.getGuildChannelById("820966007567941672")?.manager?.setName(
-        if (minecraftServer.isOnline()) "MC 🟢 ${minecraftServer.players.online} ($time)" else "MC offline ($time)"
-    )?.queue()
 }
 
 fun setHelp() {
@@ -101,9 +95,21 @@ fun setHelp() {
         ).queue { msg -> msg.makeRemovable() }
     })
 
+    bot.commands.add(Command("help trigger", "Gombóc magától reagál dolgokra") {
+        val helpMessage = "**Dolgok, amikre Gombóc önállóan reagál:**\n" +
+                bot.commands.filter { c -> c.isTrigger }.map { c -> "${c.description}\n||`${c.head}`||" }.sorted().joinToString("\n")
+        it.channel.sendMessage(
+            EmbedBuilder()
+                .setColor(Color(0, 128, 255))
+                .setTitle("Gombóc trigger-ek")
+                .setDescription(helpMessage)
+                .build()
+        ).queue { msg -> msg.makeRemovable() }
+    })
+
     bot.commands.add(Command("help", "ÁÁÁÁÁÁÁÁÁ!!!") {
         val helpMessage = "**Parancsok (mindegyik elé `${Data.prefix}` vagy szólítsd meg Gombócot):**\n" +
-                bot.commands.filter { c -> !c.isAdminOnly }.map { c -> c.toString() }.sorted().joinToString("\n")
+                bot.commands.filter { c -> c.tags.contains(Command.TAG_BASIC) }.map { c -> c.toString() }.sorted().joinToString("\n")
         it.channel.sendMessage(
             EmbedBuilder()
                 .setColor(Color(0, 128, 255))
@@ -199,13 +205,6 @@ fun setAdminCommands() {
         it.channel.sendMessage("```\n" + Data.logRead() + "\n```").queue { msg -> msg.makeRemovable() }
     }.setIsAdminOnly(true))
 
-    /*
-    bot.commands.add(Command("canstop", "biztonságos leállítás ellenőrzése") {
-        val text = "Utolsó vibe parancs: $lastVibeCommand"
-        it.channel.sendMessage(text).queue()
-    }.setIsAdminOnly(true))
-     */
-
     bot.commands.add(Command("clear", "utolsó üzenetek törlése") {
         val count = it.contentRaw.removePrefix(".clear ").toInt() + 1
         bot.getSelf().jda.presence.setStatus(OnlineStatus.DO_NOT_DISTURB)
@@ -225,7 +224,7 @@ fun setAdminCommands() {
 fun setBasicCommands() {
     bot.commands.add(Command("ping", "🏓") {
         it.channel.sendMessage(":ping_pong:").queue { msg -> msg.makeRemovable() }
-        pingMinecraftServer()
+        Pinger.pingMinecraftServer(bot.getSelf().jda)
     })
 
     bot.commands.add(Command("invite", "hívj meg a saját szerveredre") {
@@ -315,6 +314,7 @@ fun setBasicCommands() {
                 .addField("Disenchantment", "Netflix", true)
                 .addField("Final Space", "Netflix", true)
                 .addField("Helluva Boss", "On YouTube from Vivziepop", true)
+                .addField("Samurai Jack", "", true)
                 .addField("Sonic Boom", "On YouTube", true)
                 .build()
         ).queue { msg -> msg.makeRemovable() }
@@ -422,7 +422,6 @@ fun setBasicCommands() {
             }
             else {
                 it.guild.audioManager.openAudioConnection(vc)
-                lastVibeCommand = Calendar.getInstance().time.toString()
             }
         }
     })
@@ -521,7 +520,7 @@ fun setBasicCommands() {
 }
 
 fun setBasicTriggers() {
-    bot.triggers[".*@random.*"] = {
+    bot.commands.add(Command(""".*@random\b.*""", "@random") {
         it.guild.loadMembers().onSuccess { members ->
             val randomMember = members.filter { m ->
                 m.onlineStatus != OnlineStatus.OFFLINE && m.onlineStatus != OnlineStatus.DO_NOT_DISTURB &&
@@ -529,34 +528,34 @@ fun setBasicTriggers() {
             }.random()
             it.reply(randomMember.asMention).queue()
         }
-    }
+    }.setIsTrigger(true))
 
-    bot.triggers["""((szia|helló|hali|csá|cső|hey|henlo) gombóc!*)|sziaszto+k.*|gombóc."""] = {
+    bot.commands.add(Command("""((szia|helló|hali|csá|cső|hey|henlo) gombóc!*)|sziaszto+k.*|gombóc""", "köszönés mindenkinek vagy Gombócnak") {
         val greetings = listOf("Szia!", "Hali!", "Henlo!", "Hey!", "Heyho!")
         it.channel.sendMessage(greetings.random()).queue()
-    }
+    }.setIsTrigger(true))
 
-    bot.triggers["""mit csináltok?.*|ki mit csinál?.*|mit csinálsz gombóc?.*"""] = {
+    bot.commands.add(Command("""mit csináltok?.*|ki mit csinál?.*|mit csinálsz gombóc?.*""", "mit csináltok? / mit csinálsz Gombóc?") {
         val activityType = when (bot.getSelf().jda.presence.activity?.type) {
             Activity.ActivityType.LISTENING -> "Zenét hallgatok 🎧"
             Activity.ActivityType.WATCHING -> "Videót nézek 📽"
             else -> "Játszok 🎮"
         }
         it.channel.sendMessage(activityType).queue()
-    }
+    }.setIsTrigger(true))
 
-    bot.triggers["kő|papír|olló|\uD83E\uDEA8|\uD83E\uDDFB|✂️"] = {
+    bot.commands.add(Command("kő|papír|olló|\uD83E\uDEA8|\uD83E\uDDFB|✂️", "kő papír olló") {
         val answers = listOf("Kő \uD83E\uDEA8", "Papír \uD83E\uDDFB", "Olló ✂️")
         it.reply(answers.random()).queue { msg -> msg.makeRemovable() }
-    }
+    }.setIsTrigger(true))
 
-    bot.triggers[".*szeret.*"] = {
+    bot.commands.add(Command(".*szeret.*", "szeretet") {
         if (!it.contentRaw.simplify().contains("nem szeret")) {
             it.addReaction("❤️").queue()
         }
-    }
+    }.setIsTrigger(true))
 
-    bot.triggers["""jó {0,1}éj.*"""] = {
+    bot.commands.add(Command("""jó {0,1}éj.*""", "jó éjt üzenetek") {
         val greetings = listOf("Aludj jól!", "Álmodj szépeket!", "Jó éjt!", "Jó éjszakát!", "Pihend ki magad!", "Kitartást holnapra!")
         if (!tags.contains("cooldown_goodnight")) {
             it.channel.sendMessage(greetings.random()).queue()
@@ -565,27 +564,27 @@ fun setBasicTriggers() {
                 tags.remove("cooldown_goodnight")
             }, 20000)
         }
-    }
+    }.setIsTrigger(true))
 
-    bot.triggers[""".*\b(baszdmeg|bazdmeg|fasz|gec|geci|kurva|ribanc|buzi|fuck|rohadj|picsa|picsába|rohadék).*"""] = {
+    bot.commands.add(Command(""".*\b(baszdmeg|bazdmeg|fasz|gec|geci|kurva|ribanc|buzi|fuck|rohadj|picsa|picsába|rohadék|cigány).*""", "káromkodás") {
         if (!it.channel.name.simplify().contains("nsfw")) {
             it.addReaction("😠").queue()
-            data.diary(bot.getSelf().jda, "${it.author.asTag} csúnyán beszélt a(z) ${it.channel.name} szobában. Azt, mondta hogy:\n${it.contentRaw}")
+            data.diary(bot.getSelf().jda, "${it.author.asTag} csúnyán beszélt a(z) ${it.channel.name} szobában.\n||${it.contentRaw.replace("||", "|")}||")
         }
-    }
+    }.setIsTrigger(true))
 
-    bot.triggers[".*(kapitalizmus|kapitalista).*"] = {
+    bot.commands.add(Command(".*(kapitalizmus|kapitalista).*", "kapitalizmus emlegetése") {
         data.diary(bot.getSelf().jda, "${it.author.asTag} a(z) ${it.channel.name} szobában a ||kapitalizmust|| emlegette.")
-    }
+    }.setIsTrigger(true))
 
-    bot.triggers[""".*\b(csáki).*"""] = {
+    bot.commands.add(Command(""".*\b(csáki).*""", "valaki Csákiról beszél") {
         val guildName = if (it.isFromGuild) "**Szerver:** ${it.guild.name} > ${it.channel.name}" else "**Privát:** ${it.channel.name}"
         val embed = EmbedBuilder()
             .setTitle("Említés egy üzenetben (Nem biztos, hogy PONT rólad van szó, csak azt figyelem hogy benne van-e egy bizonyos szöveg az üzenetben)")
             .setDescription("$guildName\n**Üzenet:** ${it.contentRaw}\n**Írta:** ${it.author.asTag}")
             .build()
-        bot.getSelf().jda.getPrivateChannelById(Data.admins[0].privateChannel)?.sendMessage(embed)?.queue()
-    }
+        bot.getSelf().jda.getPrivateChannelById(Data.admins[0].privateChannel)?.sendMessage(embed)?.queue { msg -> msg.makeRemovable() }
+    }.setIsTrigger(true))
 }
 
 fun setClickerGame() {
@@ -633,31 +632,44 @@ fun setClickerGame() {
 
 fun setHangmanGame() {
     bot.commands.add(Command("akasztófa", "G--bóc") {
-        if (it.author.id == "285051758709833729") {
-            it.channel.sendMessage("Nem indíthatsz akasztófa játékot Martin.").queue { msg -> msg.makeRemovable() }
-        }
-        else if (it.contentRaw == ".akasztófa") {
-            it.channel.sendMessage("Parancs használat: `.akasztófa ||<szöveg>||` Például: `.akasztófa ||gombóc||`").queue { msg -> msg.makeRemovable() }
+        if (it.contentRaw == ".akasztófa") {
+            it.channel.sendMessage(
+                EmbedBuilder().setTitle("Akasztófa")
+                    .setDescription(
+                        "Statisztikák: `.akasztófa stat`\n" +
+                                "Új játék: `.akasztófa ||<szöveg>||` Pl: `.akasztófa ||gombóc||` vagy " +
+                                "`.akasztófa ||játék||{❓}`\n" +
+                                "Ezt a vonalat `|` így kell írni: `AltGr + W`\n" +
+                                "Játék módosítók: ❓segítségek"
+                    )
+                    .build()
+            ).queue { msg -> msg.makeRemovable() }
         }
         else if (it.contentRaw.startsWith(".akasztófa stat")) {
             val embed = EmbedBuilder()
                 .setTitle("Akasztófa statisztikák (2021. 03. 13. óta)")
                 .setDescription("🎮win/játék, 📕szavak, 💀akasztások, +random szó ha van")
-            for (stat in data.hangmanStats) {
-                embed.addField(bot.getSelf().jda.getUserById(stat.playerId)?.asTag ?: "Ismeretlen", stat.toString(), true)
+            it.guild.loadMembers().onSuccess { members ->
+                for (stat in data.hangmanStats) {
+                    if (members.any { m -> m.id == stat.playerId }) {
+                        embed.addField(bot.getSelf().jda.getUserById(stat.playerId)?.asTag, stat.toString(), true)
+                    }
+                }
             }
             it.channel.sendMessage(embed.build()).queue { msg -> msg.makeRemovable() }
         }
         else {
             if (data.hangmanGames.any { hg -> hg.channelId == it.channel.id }) {
                 val lastHangGame = data.hangmanGames.first { hg -> hg.channelId == it.channel.id }
-                it.channel.sendMessage("Az előző akasztófa megoldása: ||${lastHangGame.text}||")
+                it.channel.sendMessage("Az előző akasztófa megoldása: ||${lastHangGame.text}||").queue()
                 data.hangmanGames.removeIf { hg -> hg.channelId == it.channel.id }
                 data.save()
             }
             val param = it.contentRaw.removePrefix(".akasztófa ").replace("||", "")
-            it.channel.sendMessage("**Akasztófa (${it.author.asTag})** Tipphez: `a.<betű>` Például: `a.k`\n```\n${Hangman.toHangedText(param, "")}\n```").queue { msg ->
-                val newGame = Hangman(it.author.id, it.guild.id, it.channel.id, msg.id, param, "")
+                .replace("""\{.*}""".toRegex(), "")
+            val mods = if (it.contentRaw.contains('{')) it.contentRaw.split('{')[1].removeSuffix("}") else ""
+            it.channel.sendMessage("**Akasztófa (${it.author.asTag})** `a.<betű>` Pl: `a.k` a kezdéshez\n```\n${Hangman.toHangedText(param, "")}\n```").queue { msg ->
+                val newGame = Hangman(it.author.id, it.guild.id, it.channel.id, param, mods, msg.id, "")
                 data.hangmanGames.add(newGame)
                 if (!newGame.toHangedText().contains("-")) {
                     msg.makeRemovable()
@@ -668,31 +680,34 @@ fun setHangmanGame() {
         }
     }.addTag(Command.TAG_GAME))
 
-    bot.triggers["""a\.[a-z]"""] = {
-        if (it.author.id == "285051758709833729") {
-            it.channel.sendMessage("Nem játszhatsz akasztófa játékot Martin.").queue { msg -> msg.makeRemovable() }
-        }
-        else {
+    bot.commands.add(Command("""a\.[a-záéíóöőúüű?]""", "akasztófa tipp") {
+        val hangGame = data.hangmanGames.first { h -> h.guildId == it.guild.id && h.channelId == it.channel.id }
+        if ("""a\.[a-záéíóöőúüű]""".toRegex().matches(it.contentRaw)) {
             val c = it.contentRaw.toLowerCase()[2]
-            val hangGame = data.hangmanGames.first { h -> h.guildId == it.guild.id && h.channelId == it.channel.id }
-            hangGame.players.add(it.author.id)
             if (!hangGame.chars.contains(c)) hangGame.chars += c
-            hangGame.sendMessage(bot.getSelf().jda, data)
-            if (hangGame.getIsGameEnded() != 0) {
-                data.addHangmanStat(Hangman.PlayerStats(hangGame.authorId, words = mutableListOf(hangGame.text)))
-                for (player in hangGame.players) {
-                    data.addHangmanStat(Hangman.PlayerStats(player, 1, if (hangGame.getIsGameEnded() == 1) 1 else 0))
-                }
-                if (hangGame.getIsGameEnded() == 2) {
-                    data.addHangmanStat(Hangman.PlayerStats(hangGame.authorId, hangs = 1))
-                }
-                data.hangmanGames.remove(hangGame)
-                data.save()
-            }
-            it.delete().queue()
         }
+        else if (it.contentRaw == "a.?" && hangGame.modifiers.contains("❓")) {
+            val randomChar = hangGame.text.filter { c -> !hangGame.toHangedText().contains(c) }.random()
+            hangGame.chars += randomChar
+            hangGame.chars += "❓"
+            hangGame.chars += "❓"
+        }
+        hangGame.players.add(it.author.id)
+        hangGame.sendMessage(bot.getSelf().jda, data, it.channel)
+        if (hangGame.getIsGameEnded() != 0) {
+            data.addHangmanStat(Hangman.PlayerStats(hangGame.authorId, words = mutableListOf(hangGame.text)))
+            for (player in hangGame.players) {
+                data.addHangmanStat(Hangman.PlayerStats(player, 1, if (hangGame.getIsGameEnded() == 1) 1 else 0))
+            }
+            if (hangGame.getIsGameEnded() == 2) {
+                data.addHangmanStat(Hangman.PlayerStats(hangGame.authorId, hangs = 1))
+            }
+            data.hangmanGames.remove(hangGame)
+            data.save()
+        }
+        it.delete().queue()
         data.save()
-    }
+    }.setIsTrigger(true))
 }
 
 fun setNumGuesserGame() {
@@ -726,7 +741,7 @@ fun setNumGuesserGame() {
                     }
                 }
                 else -> {
-                    val max = (0..(param.toInt())).random()
+                    val max = param.toInt()
                     introText = "Gondoltam egy számra **0 és $max** között. Tipphez írd le simán a számot chat-re!"
                     it.channel.sendMessage(introText).queue { msg ->
                         data.numGuesserGames.add(NumGuesser(it.author.asTag, it.guild.id, it.channel.id, msg.id, (0..max).random(), mutableListOf()))
@@ -736,7 +751,7 @@ fun setNumGuesserGame() {
         }
     }.addTag(Command.TAG_GAME))
 
-    bot.triggers["[a-z]"] = {
+    bot.commands.add(Command("[a-z]", "betű kitaláló tipp") {
         val c = it.contentRaw.toLowerCase()[0]
         val x = c.toInt()
         val numGuesser = data.numGuesserGames.first { ng -> ng.guildId == it.guild.id && ng.channelId == it.channel.id && ng.tags.contains("char") }
@@ -761,9 +776,9 @@ fun setNumGuesserGame() {
             }
         }
         it.delete().queue()
-    }
+    }.setIsTrigger(true))
 
-    bot.triggers["-{0,1}[0-9]+"] = {
+    bot.commands.add(Command("-{0,1}[0-9]+", "számkitaláló tipp") {
         val x = it.contentRaw.toInt()
         val numGuesser = data.numGuesserGames.first { ng -> ng.guildId == it.guild.id && ng.channelId == it.channel.id }
         when {
@@ -794,5 +809,5 @@ fun setNumGuesserGame() {
             }
         }
         it.delete().queue()
-    }
+    }.setIsTrigger(true))
 }
