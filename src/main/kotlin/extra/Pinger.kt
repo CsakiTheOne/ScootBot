@@ -37,7 +37,7 @@ class Pinger {
             val channel = jda.getGuildChannelById("821985457218781204") as TextChannel?
 
             channel?.manager?.setName(
-                if (isOnline) "mc-🟢${players.size}-🕒$time" else "mc-💤-🕒$time"
+                if (isOnline) "mc🟢${players.size}-🕒$time" else "mc💤-🕒$time"
             )?.queue()
 
             var text = "```\n$motd\n```\n"

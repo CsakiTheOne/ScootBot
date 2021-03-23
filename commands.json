@@ -1,0 +1,42 @@
+{
+  "commands": [
+    {
+      "head": "dummy",
+      "description": "ez csak egy mű parancs, ami a fejlesztést segíti",
+      "actionType": "message",
+      "actionText": "kimenet",
+      "actionData": "❌",
+      "isAdminOnly": false,
+      "isNSFW": false,
+      "isTrigger": false,
+      "tags": ""
+    },
+    {
+      "head": "invite",
+      "description": "hívj meg a saját szerveredre!",
+      "actionType": "message",
+      "actionText": "<https://discord.com/oauth2/authorize?client_id\u003d783672257347715123\u0026scope\u003dbot\u0026permissions\u003d8>",
+      "actionData": "❌"
+    },
+    {
+      "head": "f",
+      "description": "press :regional_indicator_f: to pay respect",
+      "actionType": "file",
+      "actionText": "./f.png",
+      "actionData": "❌"
+    },
+    {
+      "head": "repost",
+      "description": "vót má'",
+      "actionType": "file",
+      "actionText": "./repost.jpg",
+      "actionData": "❌"
+    },
+    {
+      "head": "fejlesztő",
+      "description": "ha érdekel ki alkotott",
+      "actionType": "message",
+      "actionText": "A készítőm: **@CsakiTheOne#8589**. De sokan segítettek jobbá válni ❤"
+    }
+  ]
+}

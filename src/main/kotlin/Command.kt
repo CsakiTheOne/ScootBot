@@ -52,14 +52,15 @@ class Command(val head: String, val description: String, private val action: (ms
         return this
     }
 
-    fun isThisCommand(text: String) : Boolean {
+    fun matches(text: String) : Boolean {
         val input = if (doIgnoreCase) text.toLowerCase() else text
         return if (isTrigger) head.toRegex().matches(input)
         else input.startsWith("${Data.prefix}$head")
     }
 
     override fun toString(): String {
-        return "$head - $description"
+        if (isTrigger) return "$description ||`$head`||"
+        return ".$head - $description"
     }
 
     companion object {

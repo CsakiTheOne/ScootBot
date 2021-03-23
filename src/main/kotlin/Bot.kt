@@ -1,5 +1,4 @@
 import net.dv8tion.jda.api.JDABuilder
-import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
@@ -37,14 +36,14 @@ class Bot(token: String) : ListenerAdapter() {
         if (!msg.isFromGuild) {
             Data.log("Bot", "Private message from ${msg.author.asTag} (Channel id: ${msg.channel.id}): $content")
         }
-        if (Data.admins.any { it.id == msg.author.id } && commands.filter { c -> c.isAdminOnly }.any { c -> c.isThisCommand(content) }) {
-            val command = commands.filter { c -> c.isAdminOnly }.first { c -> c.isThisCommand(content) }
+        if (Data.admins.any { it.id == msg.author.id } && commands.filter { c -> c.isAdminOnly }.any { c -> c.matches(content) }) {
+            val command = commands.filter { c -> c.isAdminOnly }.first { c -> c.matches(content) }
             if (msg.isFromGuild) msg.delete().queue()
             command.run(msg)
             return
         }
-        if (commands.filter { c -> c.tags.contains(Command.TAG_BASIC) }.any { c -> c.isThisCommand(content) }) {
-            val command = commands.filter { c -> c.tags.contains(Command.TAG_BASIC) }.first { c -> c.isThisCommand(content) }
+        if (commands.filter { c -> c.tags.contains(Command.TAG_BASIC) }.any { c -> c.matches(content) }) {
+            val command = commands.filter { c -> c.tags.contains(Command.TAG_BASIC) }.first { c -> c.matches(content) }
             if (msg.isFromGuild) msg.delete().queue()
             command.run(msg)
             return
@@ -61,8 +60,8 @@ class Bot(token: String) : ListenerAdapter() {
             }
         }
         if (msg.author.isBot) return
-        if (commands.filter { c -> c.isTrigger }.any { c -> c.isThisCommand(content) }) {
-            val filtered = commands.filter { c -> c.isTrigger && c.isThisCommand(content) }
+        if (commands.filter { c -> c.isTrigger }.any { c -> c.matches(content) }) {
+            val filtered = commands.filter { c -> c.isTrigger && c.matches(content) }
             for (c in filtered) c.run(msg)
         }
     }
