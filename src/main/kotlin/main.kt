@@ -449,7 +449,7 @@ fun setBasicCommands() {
             it.channel.sendMessage("$question\n🔃: volt már ❓: megoldás | Következő: `.emoji kvíz`").queue { msg ->
                 msg.addReaction("🔃").queue()
                 msg.addReaction("❓").queue()
-                bot.reactionListeners.add { event: MessageReactionAddEvent, msg: Message ->
+                bot.reactionListeners.add { event: MessageReactionAddEvent, _: Message ->
                     if (event.messageId == msg.id) {
                         when (event.reactionEmote.emoji) {
                             "🔃" -> {
@@ -469,14 +469,14 @@ fun setBasicCommands() {
             }
         }
 
-        if (it.contentRaw.contains("méret")) {
-            it.channel.sendMessage("${questions.size}db emoji kvízem van.").queue()
-        }
-        else if (it.contentRaw.contains("debug")) {
-            it.channel.sendMessage(questions.keys.joinToString("\n")).queue()
-        }
-        else {
-            sendEmojiQuiz()
+        when {
+            it.contentRaw.contains("méret") -> {
+                it.channel.sendMessage("${questions.size}db emoji kvízem van.").queue()
+            }
+            it.contentRaw.contains("debug") -> {
+                it.channel.sendMessage(questions.keys.joinToString("\n")).queue()
+            }
+            else -> sendEmojiQuiz()
         }
     }.addTag(Command.TAG_GAME))
 
@@ -690,31 +690,7 @@ fun setHangmanGame() {
 
     bot.commands.add(Command("""a\.[a-záéíóöőúüű?]""", "akasztófa tipp") {
         val hangGame = data.hangmanGames.first { h -> h.guildId == it.guild.id && h.channelId == it.channel.id }
-        if ("""a\.[a-záéíóöőúüű]""".toRegex().matches(it.contentRaw)) {
-            val c = it.contentRaw.toLowerCase()[2]
-            if (!hangGame.chars.contains(c)) hangGame.chars += c
-        }
-        else if (it.contentRaw == "a.?" && hangGame.modifiers.contains("❓")) {
-            val randomChar = hangGame.text.filter { c -> !hangGame.toHangedText().contains(c) }.random()
-            hangGame.chars += randomChar
-            hangGame.chars += "❓"
-            hangGame.chars += "❓"
-        }
-        hangGame.players.add(it.author.id)
-        hangGame.sendMessage(bot.getSelf().jda, data, it.channel)
-        if (hangGame.getIsGameEnded() != 0) {
-            data.addHangmanStat(Hangman.PlayerStats(hangGame.authorId, words = mutableListOf(hangGame.text)))
-            for (player in hangGame.players) {
-                data.addHangmanStat(Hangman.PlayerStats(player, 1, if (hangGame.getIsGameEnded() == 1) 1 else 0))
-            }
-            if (hangGame.getIsGameEnded() == 2) {
-                data.addHangmanStat(Hangman.PlayerStats(hangGame.authorId, hangs = 1))
-            }
-            data.hangmanGames.remove(hangGame)
-            data.save()
-        }
-        it.delete().queue()
-        data.save()
+        hangGame.guess(bot.getSelf().jda, data, it)
     }.setIsTrigger(true))
 }
 
@@ -734,18 +710,9 @@ fun setNumGuesserGame() {
         else {
             val param = it.contentRaw.split(" ")[1]
             val introText: String
-            val n: Int
-            when (param) {
-                "hanna" -> {
-                    introText = "Gondoltam egy számra **${Int.MIN_VALUE} és ${Int.MAX_VALUE}** között. Tipphez írd le simán a számot chat-re!"
-                    n = (Int.MIN_VALUE..Int.MAX_VALUE).random()
-                }
-                else -> {
-                    val max = param.toInt()
-                    introText = "Gondoltam egy számra **0 és $max** között. Tipphez írd le simán a számot chat-re!"
-                    n = (0..max).random()
-                }
-            }
+            val max = if (param == "hanna") Int.MAX_VALUE else param.toInt()
+            val n = if (param == "hanna") (Int.MIN_VALUE..Int.MAX_VALUE).random() else (0..max).random()
+            introText = "Gondoltam egy számra **${if (max == Int.MAX_VALUE) Int.MIN_VALUE else 0} és $max** között. Tipphez írd le simán a számot chat-re!"
             it.channel.sendMessage(introText).queue { msg ->
                 data.numGuesserGames.add(NumGuesser(it.channel.id, msg.id, n, mutableListOf(param)))
             }
@@ -753,36 +720,16 @@ fun setNumGuesserGame() {
     }.addTag(Command.TAG_GAME))
 
     bot.commands.add(Command("-{0,1}[0-9]+", "számkitaláló tipp") {
-        val x = it.contentRaw.toInt()
         val numGuesser = data.numGuesserGames.first { ng -> ng.channelId == it.channel.id }
-        it.channel.retrieveMessageById(numGuesser.messageId).queue { msg ->
-            when {
-                x > numGuesser.num -> {
-                    var newContent = "${msg.contentRaw}\n`${it.author.name}: X < $x`"
-                    if (newContent.length > 1000) newContent += " (kevesebb, mint ${2000 - newContent.length} karakter maradt)"
-                    it.channel.editMessageById(numGuesser.messageId, newContent).queue()
-                }
-                x < numGuesser.num -> {
-                    var newContent = "${msg.contentRaw}\n`${it.author.name}: X > $x`"
-                    if (newContent.length > 1000) newContent += " (kevesebb, mint ${2000 - newContent.length} karakter maradt)"
-                    it.channel.editMessageById(numGuesser.messageId, newContent).queue()
-                }
-                x == numGuesser.num -> {
-                    it.channel.editMessageById(
-                        numGuesser.messageId,
-                        "${msg.contentRaw}\n${it.author.name} eltalálta, hogy a szám $x! 🎉\nÚj játék: `.számkitaláló`"
-                    ).queue { edited ->
-                        edited.makeRemovable()
-                        if (numGuesser.tags.contains("hanna")) {
-                            data.diary(
-                                bot.getSelf().jda,
-                                "${it.author.asTag} kitalálta a számot a legnehezebb szinten."
-                            )
-                        }
-                        data.numGuesserGames.remove(numGuesser)
-                    }
-                }
+        val x = it.contentRaw.toInt()
+        numGuesser.guess(it, x) {
+            if (tags.contains("hanna")) {
+                data.diary(
+                    bot.getSelf().jda,
+                    "${it.author.asTag} kitalálta a számot a legnehezebb szinten."
+                )
             }
+            data.numGuesserGames.remove(numGuesser)
         }
         it.delete().queue()
     }.setIsTrigger(true))

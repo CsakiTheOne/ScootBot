@@ -3,6 +3,7 @@ package extra
 import Bot.Companion.makeRemovable
 import Data
 import net.dv8tion.jda.api.JDA
+import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.entities.TextChannel
 
@@ -21,6 +22,33 @@ class Hangman(
         return if (toHangedText(true) == text) 1
         else if (getWrongChars().size >= graphcs.size - 1) 2
         else 0
+    }
+
+    fun guess(jda: JDA, data: Data, msg: Message) {
+        if ("""a\.[a-záéíóöőúüű]""".toRegex().matches(msg.contentRaw)) {
+            val c = msg.contentRaw.toLowerCase()[2]
+            if (!chars.contains(c)) chars += c
+        }
+        else if (msg.contentRaw == "a.?" && modifiers.contains("❓")) {
+            val randomChar = text.filter { c -> !toHangedText().contains(c) }.random()
+            chars += randomChar
+            chars += "❓"
+            chars += "❓"
+        }
+        players.add(msg.author.id)
+        sendMessage(jda, data, msg.channel)
+        if (getIsGameEnded() != 0) {
+            data.addHangmanStat(PlayerStats(authorId, words = mutableListOf(text)))
+            for (player in players) {
+                data.addHangmanStat(PlayerStats(player, 1, if (getIsGameEnded() == 1) 1 else 0))
+            }
+            if (getIsGameEnded() == 2) {
+                data.addHangmanStat(PlayerStats(authorId, hangs = 1))
+            }
+            data.hangmanGames.remove(this)
+        }
+        msg.delete().queue()
+        data.save()
     }
 
     fun sendMessage(jda: JDA, data: Data, channel: MessageChannel) {

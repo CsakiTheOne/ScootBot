@@ -6,9 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="a2c408bc-c639-4490-abea-6ba8cb078878" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data.json" beforeDir="false" afterPath="$PROJECT_DIR$/data.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/Bot.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Bot.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/Data.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Data.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/extra/Hangman.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/extra/Hangman.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/extra/NumGuesser.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/extra/NumGuesser.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/main.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/main.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
