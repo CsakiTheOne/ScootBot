@@ -1,5 +1,6 @@
 import Global.Companion.data
 import Global.Companion.jda
+import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.events.ReadyEvent
@@ -7,12 +8,13 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.requests.GatewayIntent
+import java.awt.Color
 
 class Bot(token: String) : ListenerAdapter() {
     val commands = mutableListOf<Command>()
     val reactionListeners = mutableListOf<(event: MessageReactionAddEvent, msg: Message) -> Unit>()
 
-    private lateinit var self: SelfUser
+    lateinit var self: SelfUser
 
     init {
         val gatewayIntents = GatewayIntent.getIntents(GatewayIntent.DEFAULT)
@@ -51,17 +53,6 @@ class Bot(token: String) : ListenerAdapter() {
             if (msg.isFromGuild) msg.delete().queue()
             command.run(msg)
             return
-        }
-        for (cc in data.customCommands) {
-            if (content.startsWith(Data.prefix + Data.prefix + cc.command)) {
-                msg.channel.sendTyping().queue()
-                Data.log("Bot", "Custom command received: $content Author: ${msg.author.asTag} (${msg.author.id})")
-                if (msg.isFromGuild) msg.delete().queue()
-                msg.channel.sendMessage(cc.output).queue {
-                    if (cc.isRemovable) it.makeRemovable()
-                }
-                break
-            }
         }
         if (msg.author.isBot) return
         if (commands.filter { c -> c.isTrigger }.any { c -> c.matches(content) }) {
@@ -102,14 +93,16 @@ class Bot(token: String) : ListenerAdapter() {
         }
     }
 
-    fun getSelf() = self
-
     fun addReactionListener(listener: (event: MessageReactionAddEvent, msg: Message) -> Unit): (event: MessageReactionAddEvent, msg: Message) -> Unit {
         reactionListeners.add(listener)
         return listener
     }
 
     companion object {
+        fun EmbedBuilder?.create(title: String, description: String): EmbedBuilder {
+            return EmbedBuilder().setTitle(title).setDescription(description).setColor(Color(0, 128, 255))
+        }
+
         fun Message?.makeRemovable(callback: (() -> Unit)? = null) {
             this?.addReaction("❌")?.queue { callback?.invoke() }
         }

@@ -17,6 +17,7 @@ dependencies {
     implementation("net.dv8tion:JDA:4.2.0_241")
     implementation("ch.qos.logback:logback-classic:1.2.3")
     implementation("com.google.code.gson:gson:2.8.6")
+    implementation("com.sedmelluq:lavaplayer:1.3.73")
     testImplementation(kotlin("test-junit"))
     implementation(kotlin("stdlib-jdk8"))
 }

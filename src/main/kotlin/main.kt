@@ -1,6 +1,9 @@
+import Bot.Companion.create
 import Bot.Companion.makeRemovable
 import Bot.Companion.simplify
 import Global.Companion.data
+import Global.Companion.jda
+import com.sedmelluq.discord.lavaplayer.player.*
 import extra.*
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.OnlineStatus
@@ -38,36 +41,29 @@ fun reload() {
 
 fun main() {
     bot = Bot(Secret.getToken("start"))
-    Data.log("Main", "----- BOT STARTED -----")
     reload()
+    Data.log("Main", "----- BOT STARTED -----")
 
     Timer().scheduleAtFixedRate(timerTask {
         if (!autoActivity) return@timerTask
         val activities = listOf(
-            Activity.playing("${bot.getSelf().jda.guilds.size} szerveren"),
-            Activity.playing("HealTogether"),
+            Activity.playing("${jda.guilds.size} szerveren"),
             Activity.playing("Minecraft"),
             Activity.playing("Terraria (köszönöm @Krey)"),
-            Activity.playing("No Man's Sky"),
-            Activity.playing("Random Bot"),
-            Activity.playing("Sonic Mania"),
             Activity.listening(".help"),
             Activity.listening("Emerald Hill Zone"),
-            Activity.listening("Fist Bump"),
             Activity.listening("Lifelight - AmaLee"),
             Activity.listening("Thunderstruck - AC/DC"),
             Activity.listening("TheFatRat"),
             Activity.listening("Lindsey Stirling"),
-            Activity.watching("Disenchantment"),
             Activity.watching("TikTok: @csakivevo"),
             Activity.watching("Technoblade trolling Skeppy"),
             Activity.watching("Minecraft stream online órán"),
-            Activity.watching("Unusual Memes"),
-            Activity.watching("Mr. Robot"),
+            Activity.watching("Final Space"),
             Activity.watching("🟧⬛"),
         )
-        bot.getSelf().jda.presence.activity = activities.random()
-        Data.log("Activity manager", bot.getSelf().jda.presence.activity.toString())
+        jda.presence.activity = activities.random()
+        Data.log("Activity manager", jda.presence.activity.toString())
 
         Pinger.pingMinecraftServer()
     }, 3000L, (1000 * 60 * 5).toLong())
@@ -79,9 +75,7 @@ fun setHelp() {
                 bot.commands.filter { c -> c.isAdminOnly }.map { c -> c.toString() }.sorted().joinToString("\n")
         it.channel.sendMessage(
             EmbedBuilder()
-                .setColor(Color(0, 128, 255))
-                .setTitle("Gombóc segítség")
-                .setDescription(helpMessage)
+                .create("Gombóc segítség", helpMessage)
                 .build()
         ).queue { msg -> msg.makeRemovable() }
     }.setIsAdminOnly(true))
@@ -91,10 +85,7 @@ fun setHelp() {
                 bot.commands.filter { c -> c.tags.contains(Command.TAG_GAME) }.map { c -> c.toString() }.sorted()
                     .joinToString("\n")
         it.channel.sendMessage(
-            EmbedBuilder()
-                .setColor(Color(0, 128, 255))
-                .setTitle("Gombóc játékok")
-                .setDescription(helpMessage)
+            EmbedBuilder().create("Gombóc játékok", helpMessage)
                 .build()
         ).queue { msg -> msg.makeRemovable() }
     })
@@ -103,10 +94,7 @@ fun setHelp() {
         val helpMessage = "**Dolgok, amikre Gombóc önállóan reagál:**\n" +
                 bot.commands.filter { c -> c.isTrigger }.map { c -> c.toString() }.sorted().joinToString("\n")
         it.channel.sendMessage(
-            EmbedBuilder()
-                .setColor(Color(0, 128, 255))
-                .setTitle("Gombóc trigger-ek")
-                .setDescription(helpMessage)
+            EmbedBuilder().create("Gombóc trigger-ek", helpMessage)
                 .setFooter("Regex: <https://regexr.com/>")
                 .build()
         ).queue { msg -> msg.makeRemovable() }
@@ -117,50 +105,9 @@ fun setHelp() {
                 bot.commands.filter { c -> c.tags.contains(Command.TAG_BASIC) }.map { c -> c.toString() }.sorted()
                     .joinToString("\n")
         it.channel.sendMessage(
-            EmbedBuilder()
-                .setColor(Color(0, 128, 255))
-                .setTitle("Gombóc segítség")
-                .setDescription(helpMessage)
+            EmbedBuilder().create("Gombóc segítség", helpMessage)
                 .build()
         ).queue { msg -> msg.makeRemovable() }
-    })
-
-    bot.commands.add(Command("custom", "saját parancsokat alkothatsz") {
-        if (it.contentRaw == ".custom") {
-            val helpMessage = "Új parancs: `.custom add <parancs>; [kimenet]; [egyéb beállítások]`\n" +
-                    "Törlés: `.custom delete <parancs>`\nBeállítások: minden emoji egy beállítás\n" +
-                    "❌: törölhető üzenet\n\n${
-                        data.customCommands.map { c ->
-                            c.command
-                        }.sorted().joinToString()
-                    }\n" +
-                    "**A saját parancsok prefixe:** `..`"
-            it.channel.sendMessage(
-                EmbedBuilder()
-                    .setColor(Color(0, 128, 255))
-                    .setTitle("Saját parancsok")
-                    .setDescription(helpMessage)
-                    .build()
-            ).queue { msg -> msg.makeRemovable() }
-        } else if (it.contentRaw.startsWith(".custom add")) {
-            val params = it.contentRaw.removePrefix(".custom add ").split(";").map { param -> param.trim() }
-            if (data.customCommands.any { cc -> cc.command == params[0] }) {
-                it.channel.sendMessage("Már van ilyen parancs!").queue { msg -> msg.makeRemovable() }
-            } else {
-                when (params.size) {
-                    3 -> data.customCommands.add(CustomCommand(params[0], params[1], params[2].contains("❌")))
-                    2 -> data.customCommands.add(CustomCommand(params[0], params[1], false))
-                    1 -> data.customCommands.add(CustomCommand(params[0], "Ez a parancs nem csinál semmit.", true))
-                }
-                data.save()
-                if (params.size < 4) it.channel.sendMessage("Új parancs hozzáadva ✅")
-                    .queue { msg -> msg.makeRemovable() }
-            }
-        } else if (it.contentRaw.startsWith(".custom delete")) {
-            data.customCommands.removeIf { cc -> cc.command == it.contentRaw.removePrefix(".custom delete ") }
-            data.save()
-            it.channel.sendMessage("Parancs törölve ✅").queue { msg -> msg.makeRemovable() }
-        }
     })
 }
 
@@ -172,17 +119,16 @@ fun setAdminCommands() {
     }.setIsAdminOnly(true))
 
     bot.commands.add(Command("status offline", "offline-ra állítja a botot") {
-        bot.getSelf().jda.presence.setStatus(OnlineStatus.OFFLINE)
-        println("Status set to ${bot.getSelf().jda.presence.status.name}")
+        jda.presence.setStatus(OnlineStatus.OFFLINE)
+        println("Status set to ${jda.presence.status.name}")
     }.setIsAdminOnly(true))
 
     bot.commands.add(Command("activity", "bot állapot állítás") {
-        if (it.contentRaw.contains("auto")) {
-            autoActivity = true
-        } else {
+        if (it.contentRaw.contains("auto")) autoActivity = true
+        else {
             autoActivity = false
             val activityType = it.contentRaw.removePrefix(".activity ").split(' ')[0]
-            bot.getSelf().jda.presence.activity = when (activityType) {
+            jda.presence.activity = when (activityType) {
                 "play" -> Activity.playing(it.contentRaw.substring(15))
                 "watch" -> Activity.watching(it.contentRaw.substring(16))
                 "stream" -> Activity.streaming(it.contentRaw.substring(17), it.contentRaw.substringAfter("URL="))
@@ -194,7 +140,7 @@ fun setAdminCommands() {
 
     bot.commands.add(Command("guilds", "szerverek mutatása") {
         val guilds =
-            if (it.contentRaw == ".guilds") bot.getSelf().jda.guilds else bot.getSelf().jda.guilds.filter { g ->
+            if (it.contentRaw == ".guilds") jda.guilds else jda.guilds.filter { g ->
                 g.name.toLowerCase().contains(it.contentRaw.removePrefix(".guilds "))
             }
         for (guild in guilds) {
@@ -222,13 +168,13 @@ fun setAdminCommands() {
 
     bot.commands.add(Command("clear", "utolsó üzenetek törlése") {
         val count = it.contentRaw.removePrefix(".clear ").toInt() + 1
-        bot.getSelf().jda.presence.setStatus(OnlineStatus.DO_NOT_DISTURB)
+        jda.presence.setStatus(OnlineStatus.DO_NOT_DISTURB)
         it.channel.history.retrievePast(count).queue { msgs ->
             for (i in 0 until msgs.size) {
                 msgs[i].delete().queue {
                     println("[CLEAR]: Deleted message ${i}/${msgs.size - 1}")
                     if (i >= msgs.size - 1) {
-                        bot.getSelf().jda.presence.setStatus(OnlineStatus.ONLINE)
+                        jda.presence.setStatus(OnlineStatus.ONLINE)
                     }
                 }
             }
@@ -421,15 +367,25 @@ fun setBasicCommands() {
     })
 
     bot.commands.add(Command("vibe", "vibe-olunk együtt voice-ban?") {
+        val vc = it.member?.voiceState?.channel
         if (it.contentRaw.contains("end")) {
             it.guild.audioManager.closeAudioConnection()
+        } else if (it.contentRaw == ".vibe help") {
+            it.channel.sendMessage("Vibe-oljunk!\n`.vibe (bruh|in the 20s|otter|<YouTube link>)`")
+                .queue { msg -> msg.makeRemovable() }
         } else {
-            val vc = it.member?.voiceState?.channel
             if (vc == null) {
                 it.channel.sendMessage("Nem vagy hívásban, szóval nem tudom hová jöjjek.")
                     .queue { msg -> msg.makeRemovable() }
             } else {
-                it.guild.audioManager.openAudioConnection(vc)
+                when (val param = it.contentRaw.removePrefix(".vibe").trim()) {
+                    "bruh" -> AudioModule.playSound(vc, AudioModule.SOUND_BRUH)
+                    "in the 20s" -> AudioModule.playSound(vc, AudioModule.SOUND_VIBING20S)
+                    "otter" -> AudioModule.playSound(vc, AudioModule.SOUND_OTTER)
+                    else -> if (param.isNotEmpty()) AudioModule.playSound(vc, param) else AudioModule.joinVoice(vc)
+                }
+                it.channel.sendMessage("Vibe-oljunk!\n`.vibe (bruh|in the 20s|otter|<YouTube link>)`")
+                    .queue { msg -> msg.makeRemovable() }
             }
         }
     })
@@ -474,8 +430,8 @@ fun setBasicCommands() {
                                     question + "\nMegoldás: ||" + questions[question] + "||\n" +
                                             "Következő: `.emoji kvíz`"
                                 ).queue()
-                                msg.removeReaction("🔃", bot.getSelf()).queue()
-                                msg.removeReaction("❓", bot.getSelf()).queue()
+                                msg.removeReaction("🔃", bot.self).queue()
+                                msg.removeReaction("❓", bot.self).queue()
                             }
                         }
                         msg.removeReaction(event.reactionEmote.emoji, event.user!!).queue()
@@ -522,7 +478,7 @@ fun setBasicCommands() {
                 }
             }
             it.channel.sendMessage("**Hype!** Reagálj erre az üzenetre! 🎉\n`[       START!       ]` ${max * 3} másodpercetek van!")
-                .queue { msg ->
+                .queue {
                     listener = bot.addReactionListener { event: MessageReactionAddEvent, msg: Message ->
                         onHypeReact(
                             event,
@@ -565,7 +521,7 @@ fun setBasicTriggers() {
             """mit csináltok?.*|ki mit csinál?.*|mit csinálsz gombóc?.*""",
             "mit csináltok? / mit csinálsz Gombóc?"
         ) {
-            val activityType = when (bot.getSelf().jda.presence.activity?.type) {
+            val activityType = when (jda.presence.activity?.type) {
                 Activity.ActivityType.LISTENING -> "Zenét hallgatok 🎧"
                 Activity.ActivityType.WATCHING -> "Videót nézek 📽"
                 else -> "Játszok 🎮"
@@ -633,7 +589,7 @@ fun setBasicTriggers() {
             .setTitle("Említés egy üzenetben (Nem biztos, hogy PONT rólad van szó, csak azt figyelem hogy benne van-e egy bizonyos szöveg az üzenetben)")
             .setDescription("$guildName\n**Üzenet:** ${it.contentRaw}\n**Írta:** ${it.author.asTag}")
             .build()
-        bot.getSelf().jda.getPrivateChannelById(Data.admins[0].privateChannel)?.sendMessage(embed)
+        jda.getPrivateChannelById(Data.admins[0].privateChannel)?.sendMessage(embed)
             ?.queue { msg -> msg.makeRemovable() }
     }.setIsTrigger(true))
 }
@@ -671,7 +627,7 @@ fun setClickerGame() {
                 .setTitle("Clicker játék")
                 .setDescription("🌍: ${data.clicks["global"] ?: 0}\n🖱: $clicks")
                 .build()
-        ).queue { _ ->
+        ).queue {
             event.reaction.removeReaction(event.user!!).queue()
         }
     }
@@ -704,12 +660,12 @@ fun setHangmanGame() {
             it.guild.loadMembers().onSuccess { members ->
                 for (stat in data.hangmanStats) {
                     if (members.any { m -> m.id == stat.playerId }) {
-                        embed.addField(bot.getSelf().jda.getUserById(stat.playerId)?.asTag, stat.toString(), true)
+                        embed.addField(jda.getUserById(stat.playerId)?.asTag, stat.toString(), true)
                     }
                 }
             }.onError {
                 data.hangmanStats.map { hgs ->
-                    embed.addField(bot.getSelf().jda.getUserById(hgs.playerId)?.asTag, hgs.toString(), true)
+                    embed.addField(jda.getUserById(hgs.playerId)?.asTag, hgs.toString(), true)
                 }
             }
             it.channel.sendMessage(embed.build()).queue { msg -> msg.makeRemovable() }
@@ -745,7 +701,6 @@ fun setHangmanGame() {
     bot.commands.add(Command("""van.*akasztófa\?.*""", "van a szobában akasztófa?") {
         val hangGame = data.hangmanGames.firstOrNull { h -> h.guildId == it.guild.id && h.channelId == it.channel.id }
         if (hangGame == null) it.reply("Nem, nincs. Új játékhoz írd be, hogy `.akasztófa`").queue()
-        else hangGame.sendMessage(bot.getSelf().jda, data, it.channel)
     }.setIsTrigger(true))
 
     bot.commands.add(Command("""a\.[a-záéíóöőúüű?]""", "akasztófa tipp") {

@@ -1,5 +1,4 @@
 import com.google.gson.Gson
-import extra.CustomCommand
 import extra.Hangman
 import extra.NumGuesser
 import extra.SimpleChannel
@@ -12,7 +11,6 @@ import java.time.format.DateTimeFormatter
 
 class Data() {
     var diaryChannel = SimpleChannel("", "")
-    var customCommands = mutableListOf<CustomCommand>()
 
     var counters = mutableMapOf<String, Int>()
 
