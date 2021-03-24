@@ -8,7 +8,7 @@ import net.dv8tion.jda.api.requests.GatewayIntent
 
 class Bot(token: String) : ListenerAdapter() {
     val commands = mutableListOf<Command>()
-    val reactionListeners = mutableListOf<(e: MessageReactionAddEvent) -> Unit>()
+    val reactionListeners = mutableListOf<(event: MessageReactionAddEvent, msg: Message) -> Unit>()
 
     private lateinit var self: SelfUser
 
@@ -70,32 +70,37 @@ class Bot(token: String) : ListenerAdapter() {
         if (event.user?.isBot == true) return
         val emoji = if (event.reactionEmote.isEmoji) event.reactionEmote.emoji else "custom emote"
         Data.log("MessageReactionListener", emoji)
-        if (emoji == "❌") {
-            event.retrieveMessage().queue { msg ->
-                val isRemovable = msg.reactions.any { react ->
-                    (react.isSelf) && react.reactionEmote.emoji == "❌"
+        when (emoji) {
+            "❌" -> {
+                event.retrieveMessage().queue { msg ->
+                    val isRemovable = msg.reactions.any { react ->
+                        (react.isSelf) && react.reactionEmote.emoji == "❌"
+                    }
+                    if (isRemovable) msg.delete().queue()
                 }
-                if (isRemovable) msg.delete().queue()
+            }
+            "📌" -> {
+                event.retrieveMessage().queue { msg ->
+                    msg.removeReaction("❌", self).queue()
+                }
+            }
+            "\uD83D\uDC94" -> {
+                event.retrieveMessage().queue { msg ->
+                    msg.removeReaction("❤️", self).queue()
+                }
             }
         }
-        else if (emoji == "📌") {
-            event.retrieveMessage().queue { msg ->
-                msg.removeReaction("❌", self).queue()
+
+        event.retrieveMessage().queue {
+            for (reactionListener in reactionListeners) {
+                reactionListener(event, it)
             }
-        }
-        else if (emoji == "\uD83D\uDC94") {
-            event.retrieveMessage().queue { msg ->
-                msg.removeReaction("❤️", self).queue()
-            }
-        }
-        for (reactionListener in reactionListeners) {
-            reactionListener(event)
         }
     }
 
     fun getSelf() = self
 
-    fun addReactionListener(listener: (e: MessageReactionAddEvent) -> Unit) : (e: MessageReactionAddEvent) -> Unit {
+    fun addReactionListener(listener: (event: MessageReactionAddEvent, msg: Message) -> Unit) : (event: MessageReactionAddEvent, msg: Message) -> Unit {
         reactionListeners.add(listener)
         return listener
     }

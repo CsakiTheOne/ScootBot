@@ -265,6 +265,60 @@ fun setBasicCommands() {
         ).queue()
     })
 
+    bot.commands.add(Command("számláló", "számolok dolgokat") {
+        when (it.contentRaw) {
+            ".számláló" -> {
+                it.channel.sendMessage(
+                    EmbedBuilder()
+                        .setTitle("Számoló")
+                        .setDescription("`.számoló lista` `.számoló <valami> 1` `.számoló <valami> -1` `.számoló <valami> reset`")
+                        .build()
+                ).queue { msg -> msg.makeRemovable() }
+            }
+            ".számláló lista" -> {
+                it.channel.sendMessage(
+                    EmbedBuilder()
+                        .setTitle("Számoló")
+                        .setDescription(data.counters.keys.joinToString { k -> "$k: ${data.counters[k]}" })
+                        .build()
+                ).queue { msg -> msg.makeRemovable() }
+            }
+            else -> {
+                val params = it.contentRaw.split(' ')
+                val counter = params[1]
+                val modifier = if (params.size > 2) params[2] else ""
+                if (modifier == "reset") data.counters.remove(counter)
+                else if ("-?[0-9]+".toRegex().matches(modifier)) data.counters[counter] = (data.counters[counter] ?: 0) + modifier.toInt()
+
+                if (data.counters[counter] == 0) data.counters.remove(counter)
+
+                it.channel.sendMessage("$counter: ${data.counters[counter] ?: 0}").queue { msg ->
+                    msg.addReaction("👆").queue()
+                    msg.addReaction("👇").queue()
+                    msg.makeRemovable()
+                }
+            }
+        }
+        data.save()
+    })
+
+    bot.reactionListeners.add { event: MessageReactionAddEvent, msg: Message ->
+        val key = msg.contentRaw.split(':')[0]
+        if (data.counters.any { c -> c.key == key }) {
+            when (event.reactionEmote.emoji) {
+                "👆" -> {
+                    data.counters[key] = (data.counters[key] ?: 0) + 1
+                    msg.removeReaction("👆", event.user!!).queue()
+                }
+                "👇" -> {
+                    data.counters[key] = (data.counters[key] ?: 0) - 1
+                    msg.removeReaction("👇", event.user!!).queue()
+                }
+            }
+            msg.editMessage("$key: ${data.counters[key] ?: 0}").queue()
+        }
+    }
+
     bot.commands.add(Command("szavazás", "én egy demokratikusan megválasztott bot vagyok") {
         if (it.contentRaw == ".szavazás") {
             it.channel.sendMessage(
@@ -395,7 +449,7 @@ fun setBasicCommands() {
             it.channel.sendMessage("$question\n🔃: volt már ❓: megoldás | Következő: `.emoji kvíz`").queue { msg ->
                 msg.addReaction("🔃").queue()
                 msg.addReaction("❓").queue()
-                bot.reactionListeners.add { event ->
+                bot.reactionListeners.add { event: MessageReactionAddEvent, msg: Message ->
                     if (event.messageId == msg.id) {
                         when (event.reactionEmote.emoji) {
                             "🔃" -> {
@@ -431,7 +485,7 @@ fun setBasicCommands() {
             it.channel.sendMessage("A parancs használata: `.hype <szám>`").queue { msg -> msg.makeRemovable() }
         }
         else {
-            lateinit var listener: (e: MessageReactionAddEvent) -> Unit
+            lateinit var listener: (e: MessageReactionAddEvent, m: Message) -> Unit
             val max = it.contentRaw.removePrefix(".hype ").toInt()
             fun onHypeReact(event: MessageReactionAddEvent, msg: Message) {
                 if (event.messageId != msg.id) return
@@ -449,7 +503,7 @@ fun setBasicCommands() {
                 }
             }
             it.channel.sendMessage("**Hype!** Reagálj erre az üzenetre! 🎉\n`[       START!       ]` ${max * 3} másodpercetek van!").queue { msg ->
-                listener = bot.addReactionListener { event -> onHypeReact(event, msg) }
+                listener = bot.addReactionListener { event: MessageReactionAddEvent, msg: Message -> onHypeReact(event, msg) }
             }
             Timer().schedule(timerTask {
                 bot.reactionListeners.remove(listener)
@@ -543,29 +597,25 @@ fun setClickerGame() {
         }
     }.addTag(Command.TAG_GAME))
 
-    bot.reactionListeners.add {
-        if (!data.clickerMessageIds.contains(it.messageId)) return@add
-        if (it.reactionEmote.emoji == "❌") {
-            it.retrieveMessage().queue { msg ->
-                data.clickerMessageIds.remove(msg.id)
-                data.save()
-                msg.delete().queue()
-            }
+    bot.reactionListeners.add { event: MessageReactionAddEvent, msg: Message ->
+        if (!data.clickerMessageIds.contains(msg.id)) return@add
+        if (event.reactionEmote.emoji == "❌") {
+            data.clickerMessageIds.remove(msg.id)
+            data.save()
+            msg.delete().queue()
             return@add
         }
-        it.retrieveMessage().queue { msg ->
-            data.clicks["global"] = (data.clicks["global"] ?: 0) + 1
-            data.save()
-            val clicks = (msg.embeds[0].description!!.split("\n")[1].split(":")[1].trim().toInt()) + 1
-            msg.editMessage(
-                EmbedBuilder()
-                    .setColor(Color((0..255).random(), (0..255).random(), (0..255).random()))
-                    .setTitle("Clicker játék")
-                    .setDescription("🌍: ${data.clicks["global"] ?: 0}\n🖱: $clicks")
-                    .build()
-            ).queue { _ ->
-                it.reaction.removeReaction(it.user!!).queue()
-            }
+        data.clicks["global"] = (data.clicks["global"] ?: 0) + 1
+        data.save()
+        val clicks = (msg.embeds[0].description!!.split("\n")[1].split(":")[1].trim().toInt()) + 1
+        msg.editMessage(
+            EmbedBuilder()
+                .setColor(Color((0..255).random(), (0..255).random(), (0..255).random()))
+                .setTitle("Clicker játék")
+                .setDescription("🌍: ${data.clicks["global"] ?: 0}\n🖱: $clicks")
+                .build()
+        ).queue { _ ->
+            event.reaction.removeReaction(event.user!!).queue()
         }
     }
 }
@@ -602,6 +652,10 @@ fun setHangmanGame() {
                     if (members.any { m -> m.id == stat.playerId }) {
                         embed.addField(bot.getSelf().jda.getUserById(stat.playerId)?.asTag, stat.toString(), true)
                     }
+                }
+            }.onError {
+                data.hangmanStats.map { hgs ->
+                    embed.addField(bot.getSelf().jda.getUserById(hgs.playerId)?.asTag, hgs.toString(), true)
                 }
             }
             it.channel.sendMessage(embed.build()).queue { msg -> msg.makeRemovable() }
@@ -672,7 +726,6 @@ fun setNumGuesserGame() {
                     .setTitle("Számkitaláló játékmódok:")
                     .setDescription(
                         "Alap: `.számkitaláló <max szám>` pl: `.számkitaláló 100`\n" +
-                        "Betű: `.számkitaláló abc`\n" +
                         "Hanna: `.számkitaláló hanna` (elég nagy kihívás)"
                     )
                     .build()
@@ -680,62 +733,24 @@ fun setNumGuesserGame() {
         }
         else {
             val param = it.contentRaw.split(" ")[1]
-            var introText = ""
+            val introText: String
+            val n: Int
             when (param) {
-                "abc" -> {
-                    introText = "Gondoltam egy betűre az (angol) ABC-ből. Tippeléshez írj egy betűt!"
-                    it.channel.sendMessage(introText).queue { msg ->
-                        data.numGuesserGames.add(NumGuesser(it.channel.id, msg.id, (('a'.toInt())..('z'.toInt())).random(), mutableListOf("char")))
-                    }
-                }
                 "hanna" -> {
                     introText = "Gondoltam egy számra **${Int.MIN_VALUE} és ${Int.MAX_VALUE}** között. Tipphez írd le simán a számot chat-re!"
-                    it.channel.sendMessage(introText).queue { msg ->
-                        data.numGuesserGames.add(NumGuesser(it.channel.id, msg.id, (Int.MIN_VALUE..Int.MAX_VALUE).random(), mutableListOf("hanna")))
-                    }
+                    n = (Int.MIN_VALUE..Int.MAX_VALUE).random()
                 }
                 else -> {
                     val max = param.toInt()
                     introText = "Gondoltam egy számra **0 és $max** között. Tipphez írd le simán a számot chat-re!"
-                    it.channel.sendMessage(introText).queue { msg ->
-                        data.numGuesserGames.add(NumGuesser(it.channel.id, msg.id, (0..max).random(), mutableListOf()))
-                    }
+                    n = (0..max).random()
                 }
+            }
+            it.channel.sendMessage(introText).queue { msg ->
+                data.numGuesserGames.add(NumGuesser(it.channel.id, msg.id, n, mutableListOf(param)))
             }
         }
     }.addTag(Command.TAG_GAME))
-
-    bot.commands.add(Command("[a-z]", "betű kitaláló tipp") {
-        val c = it.contentRaw.toLowerCase()[0]
-        val x = c.toInt()
-        val numGuesser = data.numGuesserGames.first { ng -> ng.channelId == it.channel.id && ng.tags.contains("char") }
-        it.channel.retrieveMessageById(numGuesser.messageId).queue { msg ->
-            when {
-                x > numGuesser.num -> {
-                    it.channel.editMessageById(
-                        numGuesser.messageId,
-                        "${msg.contentRaw}\n`${it.author.name}: ? < $c`"
-                    ).queue()
-                }
-                x < numGuesser.num -> {
-                    it.channel.editMessageById(
-                        numGuesser.messageId,
-                        "${msg.contentRaw}\n`${it.author.name}: ? > $c`"
-                    ).queue()
-                }
-                x == numGuesser.num -> {
-                    it.channel.editMessageById(
-                        numGuesser.messageId,
-                        "${msg.contentRaw}\n${it.author.name} eltalálta, hogy a betű $c! 🎉\nÚj játék: `.számkitaláló`"
-                    ).queue {
-                        msg.makeRemovable()
-                        data.numGuesserGames.remove(numGuesser)
-                    }
-                }
-            }
-        }
-        it.delete().queue()
-    }.setIsTrigger(true))
 
     bot.commands.add(Command("-{0,1}[0-9]+", "számkitaláló tipp") {
         val x = it.contentRaw.toInt()

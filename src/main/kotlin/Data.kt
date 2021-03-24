@@ -15,8 +15,12 @@ import java.time.format.DateTimeFormatter
 class Data() {
     var diaryChannel = SimpleChannel("", "")
     var customCommands = mutableListOf<CustomCommand>()
+
+    var counters = mutableMapOf<String, Int>()
+
     var clickerMessageIds = mutableSetOf<String>()
     var clicks = mutableMapOf<String, Int>()
+
     var hangmanGames = mutableListOf<Hangman>()
     var hangmanStats = mutableListOf<Hangman.PlayerStats>()
     var numGuesserGames = mutableListOf<NumGuesser>()
