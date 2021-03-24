@@ -5,7 +5,7 @@ import kotlin.collections.HashMap
 
 class Brainfuck {
     companion object {
-        fun run(program: String) : String {
+        fun run(program: String): String {
             var output = ""
 
             val jumps = matchJumps(program) ?: return ""

@@ -2,6 +2,8 @@ package extra
 
 import Bot.Companion.makeRemovable
 import Data
+import Global.Companion.data
+import Global.Companion.jda
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageChannel
@@ -18,18 +20,17 @@ class Hangman(
 ) {
     var players = mutableSetOf<String>()
 
-    fun getIsGameEnded() : Int {
+    fun getIsGameEnded(): Int {
         return if (toHangedText(true) == text) 1
         else if (getWrongChars().size >= graphcs.size - 1) 2
         else 0
     }
 
-    fun guess(jda: JDA, data: Data, msg: Message) {
+    fun guess(msg: Message) {
         if ("""a\.[a-záéíóöőúüű]""".toRegex().matches(msg.contentRaw)) {
             val c = msg.contentRaw.toLowerCase()[2]
             if (!chars.contains(c)) chars += c
-        }
-        else if (msg.contentRaw == "a.?" && modifiers.contains("❓")) {
+        } else if (msg.contentRaw == "a.?" && modifiers.contains("❓")) {
             val randomChar = text.filter { c -> !toHangedText().contains(c) }.random()
             chars += randomChar
             chars += "❓"
@@ -71,7 +72,7 @@ class Hangman(
                 if (getIsGameEnded() != 0) msg.makeRemovable()
             }
             if (getIsGameEnded() == 2) {
-                data.diary(jda, "${author?.asTag}```\n${graphcs.last()}\n$text\n```$textPartPlayers")
+                data.diary("${author?.asTag}```\n${graphcs.last()}\n$text\n```$textPartPlayers")
             }
         }
         channel.retrieveMessageById(messageId).queue({
@@ -83,12 +84,12 @@ class Hangman(
         })
     }
 
-    fun toHangedText(forceFormat: Boolean = false) : String {
+    fun toHangedText(forceFormat: Boolean = false): String {
         if (!forceFormat && getIsGameEnded() != 0) return text
         return Companion.toHangedText(text, chars)
     }
 
-    fun getWrongChars() : List<Char> {
+    fun getWrongChars(): List<Char> {
         val wrong = mutableListOf<Char>()
         for (c in chars) {
             if (!text.toLowerCase().contains(c) || c == '❓') wrong.add(c)
@@ -97,12 +98,14 @@ class Hangman(
     }
 
     companion object {
-        fun toHangedText(text: String, chars: String) : String {
+        fun toHangedText(text: String, chars: String): String {
             var maskOverride = false
             var newText = ""
             for (c in text) {
                 if (c == '*') maskOverride = !maskOverride
-                else newText += if (chars.contains(c) || chars.toUpperCase().contains(c) || !c.toString().matches("[a-záéíóöőúüűA-ZÁÉÍÓÖŐÚÜŰ]".toRegex()) || maskOverride) c else '-'
+                else newText += if (chars.contains(c) || chars.toUpperCase().contains(c) || !c.toString()
+                        .matches("[a-záéíóöőúüűA-ZÁÉÍÓÖŐÚÜŰ]".toRegex()) || maskOverride
+                ) c else '-'
             }
             return newText
         }

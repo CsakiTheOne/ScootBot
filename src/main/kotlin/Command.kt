@@ -12,7 +12,7 @@ class Command(val head: String, val description: String, private val action: (ms
         if (!isAdminOnly && !isTrigger) tags.add(TAG_BASIC)
     }
 
-    fun run(msg: Message) : Boolean {
+    fun run(msg: Message): Boolean {
         if (isAdminOnly && !Data.admins.any { a -> a.id == msg.author.id }) {
             msg.channel.sendMessage("Ezt a parancsot csak egy gombóc admin használhatja!").queue { it.makeRemovable() }
             return false
@@ -26,33 +26,33 @@ class Command(val head: String, val description: String, private val action: (ms
         return true
     }
 
-    fun setIsAdminOnly(value: Boolean) : Command {
+    fun setIsAdminOnly(value: Boolean): Command {
         isAdminOnly = value
         return this
     }
 
-    fun setIsNSFW(value: Boolean) : Command {
+    fun setIsNSFW(value: Boolean): Command {
         isNSFW = value
         return this
     }
 
-    fun setIsTrigger(value: Boolean) : Command {
+    fun setIsTrigger(value: Boolean): Command {
         isTrigger = value
         if (value) doIgnoreCase = true
         return this
     }
 
-    fun setIgnoreCase(value: Boolean) : Command {
+    fun setIgnoreCase(value: Boolean): Command {
         doIgnoreCase = value
         return this
     }
 
-    fun addTag(value: String) : Command {
+    fun addTag(value: String): Command {
         tags.add(value)
         return this
     }
 
-    fun matches(text: String) : Boolean {
+    fun matches(text: String): Boolean {
         val input = if (doIgnoreCase) text.toLowerCase() else text
         return if (isTrigger) head.toRegex().matches(input)
         else input.startsWith("${Data.prefix}$head")

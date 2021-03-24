@@ -1,5 +1,6 @@
 package extra
 
+import Global.Companion.jda
 import com.google.gson.Gson
 import com.google.gson.JsonParser
 import net.dv8tion.jda.api.EmbedBuilder
@@ -22,7 +23,7 @@ import java.util.*
 
 class Pinger {
     companion object {
-        fun pingMinecraftServer(jda: JDA) {
+        fun pingMinecraftServer() {
             val mcStat = pingMcsrvstat()
             val json = JsonParser.parseString(mcStat).asJsonObject
 
@@ -30,7 +31,8 @@ class Pinger {
             val motd = if (!isOnline) "offline" else json.getAsJsonObject("motd").getAsJsonArray("clean").asString
             val playerCount = if (!isOnline) 0 else json.getAsJsonObject("players")?.getAsJsonPrimitive("online") ?: 0
             val playerMax = if (!isOnline) 0 else json.getAsJsonObject("players")?.getAsJsonPrimitive("max") ?: 0
-            val players = if (!isOnline) listOf() else json.getAsJsonObject("players")?.getAsJsonArray("list")?.toList() ?: listOf()
+            val players = if (!isOnline) listOf() else json.getAsJsonObject("players")?.getAsJsonArray("list")?.toList()
+                ?: listOf()
             val version = if (!isOnline) "" else json.getAsJsonPrimitive("version").asString
 
             val time = "${Calendar.getInstance()[Calendar.HOUR_OF_DAY]}-${Calendar.getInstance()[Calendar.MINUTE]}"
@@ -44,7 +46,8 @@ class Pinger {
             if (isOnline) text = "**$version**\n$text"
             text += if (players.isEmpty()) "Nincs fönt senki a szerveren."
             else "**Játékosok ($playerCount/$playerMax)**\n${players.joinToString()}"
-            channel?.editMessageById("821989475436724275",
+            channel?.editMessageById(
+                "821989475436724275",
                 EmbedBuilder()
                     .setTitle("Minecraft szerver infó")
                     .setDescription(text)
@@ -54,7 +57,7 @@ class Pinger {
             )?.queue()
         }
 
-        fun pingMcsrvstat() : String {
+        fun pingMcsrvstat(): String {
             return URL("https://api.mcsrvstat.us/2/80.99.231.253").readText()
         }
     }

@@ -12,7 +12,7 @@ class SimpleCommand(
     var isTrigger: Boolean?,
     var tags: String?,
 ) {
-    fun toCommand() : Command {
+    fun toCommand(): Command {
         val cmd = Command(head, description ?: "") {
             when (actionType) {
                 "message" -> it.channel.sendMessage(actionText ?: "")

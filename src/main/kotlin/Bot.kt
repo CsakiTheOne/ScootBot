@@ -1,3 +1,5 @@
+import Global.Companion.data
+import Global.Companion.jda
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.events.ReadyEvent
@@ -24,6 +26,7 @@ class Bot(token: String) : ListenerAdapter() {
     }
 
     override fun onReady(event: ReadyEvent) {
+        jda = event.jda
         self = event.jda.selfUser
         self.jda.openPrivateChannelById(Data.admins[0].id).queue()
     }
@@ -36,7 +39,8 @@ class Bot(token: String) : ListenerAdapter() {
         if (!msg.isFromGuild) {
             Data.log("Bot", "Private message from ${msg.author.asTag} (Channel id: ${msg.channel.id}): $content")
         }
-        if (Data.admins.any { it.id == msg.author.id } && commands.filter { c -> c.isAdminOnly }.any { c -> c.matches(content) }) {
+        if (Data.admins.any { it.id == msg.author.id } && commands.filter { c -> c.isAdminOnly }
+                .any { c -> c.matches(content) }) {
             val command = commands.filter { c -> c.isAdminOnly }.first { c -> c.matches(content) }
             if (msg.isFromGuild) msg.delete().queue()
             command.run(msg)
@@ -100,7 +104,7 @@ class Bot(token: String) : ListenerAdapter() {
 
     fun getSelf() = self
 
-    fun addReactionListener(listener: (event: MessageReactionAddEvent, msg: Message) -> Unit) : (event: MessageReactionAddEvent, msg: Message) -> Unit {
+    fun addReactionListener(listener: (event: MessageReactionAddEvent, msg: Message) -> Unit): (event: MessageReactionAddEvent, msg: Message) -> Unit {
         reactionListeners.add(listener)
         return listener
     }
@@ -110,7 +114,7 @@ class Bot(token: String) : ListenerAdapter() {
             this?.addReaction("❌")?.queue { callback?.invoke() }
         }
 
-        fun String.simplify() : String {
+        fun String.simplify(): String {
             return this.toLowerCase().trim().replace("á", "a").replace("é", "e")
                 .replace("í", "i").replace("ó", "o").replace("ö", "o")
                 .replace("ő", "o").replace("ű", "u").replace("ü", "u")

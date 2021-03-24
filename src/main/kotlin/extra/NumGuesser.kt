@@ -1,6 +1,8 @@
 package extra
 
 import Bot.Companion.makeRemovable
+import Global.Companion.data
+import Global.Companion.jda
 import net.dv8tion.jda.api.entities.Message
 
 class NumGuesser(
@@ -9,7 +11,7 @@ class NumGuesser(
     val num: Int,
     val tags: MutableList<String> = mutableListOf(),
 ) {
-    fun guess(msg: Message, x: Int, onWin: () -> Unit) {
+    fun guess(msg: Message, x: Int) {
         msg.channel.retrieveMessageById(messageId).queue { _ ->
             when {
                 x > num -> {
@@ -28,7 +30,10 @@ class NumGuesser(
                         "${msg.contentRaw}\n${msg.author.name} eltalálta, hogy a szám $x! 🎉\nÚj játék: `.számkitaláló`"
                     ).queue { edited ->
                         edited.makeRemovable()
-                        onWin()
+                        if (tags.contains("hanna")) {
+                            data.diary("${msg.author.asTag} kitalálta a számot a legnehezebb szinten.")
+                        }
+                        data.numGuesserGames.remove(this)
                     }
                 }
             }

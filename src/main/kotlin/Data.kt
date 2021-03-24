@@ -3,9 +3,7 @@ import extra.CustomCommand
 import extra.Hangman
 import extra.NumGuesser
 import extra.SimpleChannel
-import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.Message
-import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.entities.MessageEmbed
 import java.io.File
 import java.lang.Exception
@@ -28,8 +26,7 @@ class Data() {
     fun addHangmanStat(stat: Hangman.PlayerStats) {
         if (hangmanStats.any { s -> s.playerId == stat.playerId }) {
             hangmanStats.first { s -> s.playerId == stat.playerId }.add(stat)
-        }
-        else hangmanStats.add(stat)
+        } else hangmanStats.add(stat)
     }
 
     fun save() {
@@ -38,15 +35,15 @@ class Data() {
         File("./data.json").writeText(dataText)
     }
 
-    fun diary(jda: JDA, text: String, callback: ((Message) -> Unit)? = null) {
-        diaryChannel.toTextChannel(jda)?.sendMessage(text)?.queue {
+    fun diary(text: String, callback: ((Message) -> Unit)? = null) {
+        diaryChannel.toTextChannel()?.sendMessage(text)?.queue {
             it.crosspost().queue()
             callback?.invoke(it)
         }
     }
 
-    fun diary(jda: JDA, embed: MessageEmbed, callback: ((Message) -> Unit)? = null) {
-        diaryChannel.toTextChannel(jda)?.sendMessage(embed)?.queue {
+    fun diary(embed: MessageEmbed, callback: ((Message) -> Unit)? = null) {
+        diaryChannel.toTextChannel()?.sendMessage(embed)?.queue {
             it.crosspost().queue()
             callback?.invoke(it)
         }
@@ -64,10 +61,12 @@ class Data() {
         var log = ""
 
         fun log(sender: String, message: String) {
-            log += "${LocalDateTime.now().format(DateTimeFormatter.ofPattern("YYYY. MM. DD. HH:mm.ss"))} [${sender.toUpperCase()}]: $message\n"
+            log += "${
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("YYYY. MM. DD. HH:mm.ss"))
+            } [${sender.toUpperCase()}]: $message\n"
         }
 
-        fun logRead() : String {
+        fun logRead(): String {
             var startIndex = 0
             val logs = log.split("\n")
             while (log.length > 1900) {
@@ -82,13 +81,12 @@ class Data() {
             log = ""
         }
 
-        fun load() : Data {
+        fun load(): Data {
             try {
                 val gson = Gson()
                 val dataText = File("./data.json").readText()
                 return gson.fromJson(dataText, Data::class.java)
-            }
-            catch (ex: Exception) {
+            } catch (ex: Exception) {
                 println("Failed to load data!")
             }
             return Data()

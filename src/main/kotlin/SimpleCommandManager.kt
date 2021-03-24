@@ -12,13 +12,12 @@ class SimpleCommandManager {
     }
 
     companion object {
-        fun load() : SimpleCommandManager {
+        fun load(): SimpleCommandManager {
             try {
                 val gson = Gson()
                 val dataText = File("./commands.json").readText()
                 return gson.fromJson(dataText, SimpleCommandManager::class.java)
-            }
-            catch (ex: Exception) {
+            } catch (ex: Exception) {
                 println("Failed to load commands!")
             }
             return SimpleCommandManager()
