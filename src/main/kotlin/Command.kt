@@ -1,4 +1,5 @@
 import Bot.Companion.makeRemovable
+import Global.Companion.bot
 import net.dv8tion.jda.api.entities.Message
 
 class Command(val head: String, val description: String, private val action: (msg: Message) -> Unit) {
@@ -7,6 +8,10 @@ class Command(val head: String, val description: String, private val action: (ms
     var isTrigger: Boolean = false
     var doIgnoreCase: Boolean = false
     var tags: MutableSet<String> = mutableSetOf()
+
+    init {
+        //bot.commands.add(this)
+    }
 
     fun createTags() {
         if (!isAdminOnly && !isTrigger) tags.add(TAG_BASIC)

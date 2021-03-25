@@ -1,6 +1,7 @@
 import Bot.Companion.create
 import Bot.Companion.makeRemovable
 import Bot.Companion.simplify
+import Global.Companion.bot
 import Global.Companion.data
 import Global.Companion.jda
 import com.sedmelluq.discord.lavaplayer.player.*
@@ -16,7 +17,6 @@ import javax.script.ScriptEngine
 import javax.script.ScriptEngineManager
 import kotlin.concurrent.timerTask
 
-lateinit var bot: Bot
 lateinit var simpleCommandManager: SimpleCommandManager
 var autoActivity = true
 var tags = mutableSetOf<String>()
