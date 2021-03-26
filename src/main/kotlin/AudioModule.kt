@@ -46,6 +46,7 @@ class AudioModule {
             })
         }
 
+        val SOUND_BABABOOEY = "https://youtu.be/U_cPir6MwLM"
         val SOUND_BRUH = "https://youtu.be/2ZIpFytCSVc"
         val SOUND_OTTER = "https://www.youtube.com/watch?v=H7FbKnzKz4U&ab_channel=JarredBTwin2"
         val SOUND_VIBING20S = "https://www.youtube.com/watch?v=M94eN-YLbOs&ab_channel=EvanKing"

@@ -10,7 +10,7 @@ class Command(val head: String, val description: String, private val action: (ms
     var tags: MutableSet<String> = mutableSetOf()
 
     init {
-        //bot.commands.add(this)
+        bot.commands.add(this)
     }
 
     fun createTags() {
