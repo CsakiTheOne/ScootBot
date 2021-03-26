@@ -478,7 +478,6 @@ fun setBasicTriggers() {
         }
     }.setIsTrigger(true)
 
-
     Command(
         """((szia|helló|hali|csá|cső|hey|henlo) gombóc!*)|sziaszto+k.*|gombóc""",
         "köszönés mindenkinek vagy Gombócnak"
@@ -486,8 +485,6 @@ fun setBasicTriggers() {
         val greetings = listOf("Szia!", "Hali!", "Henlo!", "Hey!", "Heyho!")
         it.channel.sendMessage(greetings.random()).queue()
     }.setIsTrigger(true)
-
-
 
     Command(
         """mit csináltok?.*|ki mit csinál?.*|mit csinálsz gombóc?.*""",
@@ -500,7 +497,6 @@ fun setBasicTriggers() {
         }
         it.channel.sendMessage(activityType).queue()
     }.setIsTrigger(true)
-
 
     Command("kő|papír|olló", "kő papír olló") {
         val answers = listOf("Kő \uD83E\uDEA8", "Papír \uD83E\uDDFB", "Olló ✂️")
@@ -531,7 +527,6 @@ fun setBasicTriggers() {
         }
     }.setIsTrigger(true)
 
-
     Command(
         """.*\b(baszdmeg|bazdmeg|fasz|gec|geci|kurva|ribanc|buzi|fuck|rohadj|picsa|picsába|rohadék|cigány).*""",
         "káromkodás"
@@ -548,7 +543,6 @@ fun setBasicTriggers() {
             )
         }
     }.setIsTrigger(true)
-
 
     Command(".*(kapitalizmus|kapitalista).*", "kapitalizmus emlegetése") {
         data.diary("${it.author.asTag} a(z) ${it.channel.name} szobában a ||kapitalizmust|| emlegette.")
