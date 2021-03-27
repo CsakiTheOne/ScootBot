@@ -53,12 +53,10 @@ fun main() {
             Activity.listening(".help"),
             Activity.listening("Emerald Hill Zone"),
             Activity.listening("Lifelight - AmaLee"),
-            Activity.listening("Thunderstruck - AC/DC"),
             Activity.listening("TheFatRat"),
             Activity.listening("Lindsey Stirling"),
-            Activity.watching("TikTok: @csakivevo"),
             Activity.watching("Technoblade trolling Skeppy"),
-            Activity.watching("Minecraft stream online órán"),
+            Activity.watching("Helluva Boss"),
             Activity.watching("Final Space"),
             Activity.watching("🟧⬛"),
         )
