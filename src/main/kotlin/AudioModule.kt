@@ -1,7 +1,9 @@
+import com.sedmelluq.discord.lavaplayer.container.MediaContainerRegistry
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
+import com.sedmelluq.discord.lavaplayer.source.local.LocalAudioSourceManager
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
@@ -18,6 +20,7 @@ class AudioModule {
         private fun createPlayer(guildId: String): Boolean {
             if (audioPlayerManagers[guildId] == null) {
                 audioPlayerManagers[guildId] = DefaultAudioPlayerManager()
+                audioPlayerManagers[guildId]!!.registerSourceManager(LocalAudioSourceManager(MediaContainerRegistry.DEFAULT_REGISTRY))
                 audioPlayerManagers[guildId]!!.registerSourceManager(YoutubeAudioSourceManager(true))
                 audioPlayers[guildId] = audioPlayerManagers[guildId]!!.createPlayer()
                 audioPlayers[guildId]!!.volume = 20
@@ -48,6 +51,7 @@ class AudioModule {
 
         val SOUND_BABABOOEY = "https://youtu.be/U_cPir6MwLM"
         val SOUND_BRUH = "https://youtu.be/2ZIpFytCSVc"
+        val SOUND_HOPELIGHT = "./hopelight.ogg"
         val SOUND_OTTER = "https://www.youtube.com/watch?v=H7FbKnzKz4U&ab_channel=JarredBTwin2"
         val SOUND_VIBING20S = "https://www.youtube.com/watch?v=M94eN-YLbOs&ab_channel=EvanKing"
     }

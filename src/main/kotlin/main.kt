@@ -349,9 +349,10 @@ fun setBasicCommands() {
                 it.channel.sendMessage("Nem vagy hívásban, szóval nem tudom hová jöjjek.")
                     .queue { msg -> msg.makeRemovable() }
             } else {
-                when (val param = it.contentRaw.removePrefix(".vibe").trim()) {
+                when (val param = it.contentRaw.removePrefix(".vibe").simplify()) {
                     "bababooey" -> AudioModule.playSound(vc, AudioModule.SOUND_BABABOOEY)
                     "bruh" -> AudioModule.playSound(vc, AudioModule.SOUND_BRUH)
+                    "zsofi" -> AudioModule.playSound(vc, AudioModule.SOUND_HOPELIGHT)
                     "in the 20s" -> AudioModule.playSound(vc, AudioModule.SOUND_VIBING20S)
                     "otter" -> AudioModule.playSound(vc, AudioModule.SOUND_OTTER)
                     else -> if (param.isNotEmpty()) AudioModule.playSound(vc, param) else AudioModule.joinVoice(vc)
