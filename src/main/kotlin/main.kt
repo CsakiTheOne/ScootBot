@@ -159,7 +159,7 @@ fun setAdminCommands() {
 fun setBasicCommands() {
     Command("ping", "🏓") {
         it.channel.sendMessage(":ping_pong:").queue { msg -> msg.makeRemovable() }
-        Pinger.pingMinecraftServer(Secret.getMCPort("manual ping with .ping command"))
+        Pinger.pingMinecraftServer(Secret.getMCPort("manual ping with .ping command by ${it.author.asTag}"))
     }
 
     Command("tagok", "hány ember van ezen a szerveren?") {
