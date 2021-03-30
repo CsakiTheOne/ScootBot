@@ -23,8 +23,8 @@ import java.util.*
 
 class Pinger {
     companion object {
-        fun pingMinecraftServer() {
-            val mcStat = pingMcsrvstat()
+        fun pingMinecraftServer(port: Int) {
+            val mcStat = pingMcsrvstat(port)
             val json = JsonParser.parseString(mcStat).asJsonObject
 
             val isOnline = json.getAsJsonPrimitive("online").asBoolean
@@ -57,8 +57,13 @@ class Pinger {
             )?.queue()
         }
 
-        fun pingMcsrvstat(): String {
-            return URL("https://api.mcsrvstat.us/2/80.99.231.253").readText()
+        fun pingMcsrvstat(port: Int): String {
+            val ip = getPublicIP()
+            return URL("https://api.mcsrvstat.us/2/$ip:$port").readText()
+        }
+
+        fun getPublicIP(): String {
+            return URL("https://api.ipify.org").readText()
         }
     }
 }

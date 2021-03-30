@@ -32,7 +32,6 @@ class AudioModule {
         fun joinVoice(vc: VoiceChannel) {
             createPlayer(vc.guild.id)
             val handler: AudioSendHandler = AudioPlayerSendHandler(audioPlayers[vc.guild.id]!!)
-            //vc.guild.audioManager.receivingHandler = echoHandler
             vc.guild.audioManager.sendingHandler = handler
             vc.guild.audioManager.openAudioConnection(vc)
         }
@@ -43,16 +42,17 @@ class AudioModule {
                 override fun trackLoaded(track: AudioTrack) {
                     audioPlayers[vc.guild.id]!!.playTrack(track)
                 }
-                override fun playlistLoaded(playlist: AudioPlaylist) { }
-                override fun noMatches() { }
-                override fun loadFailed(throwable: FriendlyException) { }
+                override fun playlistLoaded(playlist: AudioPlaylist?) {}
+                override fun noMatches() {}
+                override fun loadFailed(exception: FriendlyException?) {}
             })
         }
 
-        val SOUND_BABABOOEY = "https://youtu.be/U_cPir6MwLM"
-        val SOUND_BRUH = "https://youtu.be/2ZIpFytCSVc"
-        val SOUND_HOPELIGHT = "./hopelight.ogg"
-        val SOUND_OTTER = "https://www.youtube.com/watch?v=H7FbKnzKz4U&ab_channel=JarredBTwin2"
-        val SOUND_VIBING20S = "https://www.youtube.com/watch?v=M94eN-YLbOs&ab_channel=EvanKing"
+        const val SOUND_BABABOOEY = "https://youtu.be/U_cPir6MwLM"
+        const val SOUND_BRUH = "https://youtu.be/2ZIpFytCSVc"
+        const val SOUND_HOPELIGHT = "./hopelight.ogg"
+        const val SOUND_MORNING = "https://youtu.be/7T_YtklLyyo"
+        const val SOUND_OTTER = "https://www.youtube.com/watch?v=H7FbKnzKz4U&ab_channel=JarredBTwin2"
+        const val SOUND_VIBING20S = "https://www.youtube.com/watch?v=M94eN-YLbOs&ab_channel=EvanKing"
     }
 }

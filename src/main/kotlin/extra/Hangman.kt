@@ -30,7 +30,12 @@ class Hangman(
         if ("""a\.[a-záéíóöőúüű]""".toRegex().matches(msg.contentRaw)) {
             val c = msg.contentRaw.toLowerCase()[2]
             if (!chars.contains(c)) chars += c
-        } else if (msg.contentRaw == "a.?" && modifiers.contains("❓")) {
+        }
+        else if ("""[a-záéíóöőúüű]""".toRegex().matches(msg.contentRaw)) {
+            val c = msg.contentRaw.toLowerCase()
+            if (!chars.contains(c)) chars += c
+        }
+        else if (msg.contentRaw == "a.?" && modifiers.contains("❓")) {
             val randomChar = text.filter { c -> !toHangedText().contains(c) }.random()
             chars += randomChar
             chars += "❓"
@@ -59,7 +64,7 @@ class Hangman(
             playerNames.add(jda.getUserById(player)!!.asTag)
         }
         fun sendNext() {
-            val textPartHelp = if (getIsGameEnded() != 0) "" else " Tipp: `a.<betű>` Pl: `a.k` Modok: $modifiers"
+            val textPartHelp = if (getIsGameEnded() != 0) "" else " Tipphez írj be egy betűt! Modok: $modifiers"
             var modHelp = ""
             if (getIsGameEnded() == 0 && modifiers.contains("❓")) modHelp += "Segítség: a.? -2 hibalehetőség 1 betűért cserébe. "
             val g = if (getWrongChars().size >= graphcs.size) graphcs.last() else graphcs[getWrongChars().size]

@@ -52,7 +52,7 @@ fun main() {
             Activity.playing("Terraria (köszönöm @Krey)"),
             Activity.listening(".help"),
             Activity.listening("Emerald Hill Zone"),
-            Activity.listening("Lifelight - AmaLee"),
+            Activity.listening("Waterflame"),
             Activity.listening("TheFatRat"),
             Activity.listening("Lindsey Stirling"),
             Activity.watching("Technoblade trolling Skeppy"),
@@ -63,7 +63,7 @@ fun main() {
         jda.presence.activity = activities.random()
         Data.log("Activity manager", jda.presence.activity.toString())
 
-        Pinger.pingMinecraftServer()
+        Pinger.pingMinecraftServer(Secret.getMCPort("automatic ping by Timer"))
     }, 3000L, (1000 * 60 * 5).toLong())
 }
 
@@ -159,7 +159,7 @@ fun setAdminCommands() {
 fun setBasicCommands() {
     Command("ping", "🏓") {
         it.channel.sendMessage(":ping_pong:").queue { msg -> msg.makeRemovable() }
-        Pinger.pingMinecraftServer()
+        Pinger.pingMinecraftServer(Secret.getMCPort("manual ping with .ping command"))
     }
 
     Command("tagok", "hány ember van ezen a szerveren?") {
@@ -307,19 +307,6 @@ fun setBasicCommands() {
         }
     }
 
-    Command("brainfuck", ">++++++[<++++++++>-]<.") {
-        it.channel.sendMessage(
-            EmbedBuilder()
-                .setTitle("Brainfuck")
-                .setDescription(
-                    "Bemenet:\n`${it.contentRaw.split(' ')[1]}`\nKimenet:\n`${
-                        Brainfuck.run(it.contentRaw.split(' ')[1])
-                    }`"
-                )
-                .build()
-        ).queue { msg -> msg.makeRemovable() }
-    }
-
     Command("js", "tudok futtatni JavaScript kódot") {
         val engine: ScriptEngine = ScriptEngineManager().getEngineByName("JavaScript")
         val input = it.contentRaw.removePrefix(".js").replace("```js", "")
@@ -342,7 +329,7 @@ fun setBasicCommands() {
         if (it.contentRaw.contains("end")) {
             it.guild.audioManager.closeAudioConnection()
         } else if (it.contentRaw == ".vibe help") {
-            it.channel.sendMessage("Vibe-oljunk!\n`.vibe (bababooey|bruh|in the 20s|otter|<YouTube link>)`")
+            it.channel.sendMessage("Vibe-oljunk!\n`.vibe (bababooey|bruh|zsofi|morning|in the 20s|otter|<YouTube link>)`")
                 .queue { msg -> msg.makeRemovable() }
         } else {
             if (vc == null) {
@@ -353,6 +340,7 @@ fun setBasicCommands() {
                     "bababooey" -> AudioModule.playSound(vc, AudioModule.SOUND_BABABOOEY)
                     "bruh" -> AudioModule.playSound(vc, AudioModule.SOUND_BRUH)
                     "zsofi" -> AudioModule.playSound(vc, AudioModule.SOUND_HOPELIGHT)
+                    "morning" -> AudioModule.playSound(vc, AudioModule.SOUND_MORNING)
                     "in the 20s" -> AudioModule.playSound(vc, AudioModule.SOUND_VIBING20S)
                     "otter" -> AudioModule.playSound(vc, AudioModule.SOUND_OTTER)
                     else -> if (param.isNotEmpty()) AudioModule.playSound(vc, param) else AudioModule.joinVoice(vc)
@@ -527,7 +515,7 @@ fun setBasicTriggers() {
     }.setIsTrigger(true)
 
     Command(
-        """.*\b(baszdmeg|bazdmeg|fasz|gec|geci|kurva|ribanc|buzi|fuck|rohadj|picsa|picsába|rohadék|cigány).*""",
+        """.*\b(kibasz|baszdmeg|bazdmeg|fasz|gec|geci|kurva|ribanc|buzi|fuck|rohadj|picsa|picsába|rohadék|cigány).*""",
         "káromkodás"
     ) {
         if (!it.channel.name.simplify().contains("nsfw")) {
@@ -645,11 +633,8 @@ fun setHangmanGame() {
                 .replace("""\{.*}""".toRegex(), "")
             val mods = if (it.contentRaw.contains('{')) it.contentRaw.split('{')[1].removeSuffix("}") else ""
             it.channel.sendMessage(
-                "**Akasztófa (${it.author.asTag})** `a.<betű>` Pl: `a.k` a kezdéshez\n```\n${
-                    Hangman.toHangedText(
-                        param,
-                        ""
-                    )
+                "**Akasztófa (${it.author.asTag})** Írj egy betűt a kezdéshez!\n```\n${
+                    Hangman.toHangedText(param, "")
                 }\n```"
             ).queue { msg ->
                 val newGame = Hangman(it.author.id, it.guild.id, it.channel.id, param, mods, msg.id, "")
@@ -666,9 +651,10 @@ fun setHangmanGame() {
     Command("""van.*akasztófa\?.*""", "van a szobában akasztófa?") {
         val hangGame = data.hangmanGames.firstOrNull { h -> h.guildId == it.guild.id && h.channelId == it.channel.id }
         if (hangGame == null) it.reply("Nem, nincs. Új játékhoz írd be, hogy `.akasztófa`").queue()
+        else hangGame.sendMessage(jda, data, it.channel)
     }.setIsTrigger(true)
 
-    Command("""a\.[a-záéíóöőúüű?]""", "akasztófa tipp") {
+    Command("""[a-záéíóöőúüű?]|(a\.[a-záéíóöőúüű?])""", "akasztófa tipp") {
         val hangGame = data.hangmanGames.first { h -> h.guildId == it.guild.id && h.channelId == it.channel.id }
         hangGame.guess(it)
     }.setIsTrigger(true)
