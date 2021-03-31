@@ -12,8 +12,6 @@ import java.time.format.DateTimeFormatter
 class Data() {
     var diaryChannel = SimpleChannel("", "")
 
-    var counters = mutableMapOf<String, Int>()
-
     var clickerMessageIds = mutableSetOf<String>()
     var clicks = mutableMapOf<String, Int>()
 

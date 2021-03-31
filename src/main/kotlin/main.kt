@@ -190,61 +190,6 @@ fun setBasicCommands() {
         ).queue()
     }
 
-    Command("számláló", "számolok dolgokat") {
-        when (it.contentRaw) {
-            ".számláló" -> {
-                it.channel.sendMessage(
-                    EmbedBuilder()
-                        .setTitle("Számoló")
-                        .setDescription("`.számoló lista` `.számoló <valami> 1` `.számoló <valami> -1` `.számoló <valami> reset`")
-                        .build()
-                ).queue { msg -> msg.makeRemovable() }
-            }
-            ".számláló lista" -> {
-                it.channel.sendMessage(
-                    EmbedBuilder()
-                        .setTitle("Számoló")
-                        .setDescription(data.counters.keys.joinToString { k -> "$k: ${data.counters[k]}" })
-                        .build()
-                ).queue { msg -> msg.makeRemovable() }
-            }
-            else -> {
-                val params = it.contentRaw.split(' ')
-                val counter = params[1]
-                val modifier = if (params.size > 2) params[2] else ""
-                if (modifier == "reset") data.counters.remove(counter)
-                else if ("-?[0-9]+".toRegex().matches(modifier)) data.counters[counter] =
-                    (data.counters[counter] ?: 0) + modifier.toInt()
-
-                if (data.counters[counter] == 0) data.counters.remove(counter)
-
-                it.channel.sendMessage("$counter: ${data.counters[counter] ?: 0}").queue { msg ->
-                    msg.addReaction("👆").queue()
-                    msg.addReaction("👇").queue()
-                    msg.makeRemovable()
-                }
-            }
-        }
-        data.save()
-    }
-
-    bot.reactionListeners.add { event: MessageReactionAddEvent, msg: Message ->
-        val key = msg.contentRaw.split(':')[0]
-        if (data.counters.any { c -> c.key == key }) {
-            when (event.reactionEmote.emoji) {
-                "👆" -> {
-                    data.counters[key] = (data.counters[key] ?: 0) + 1
-                    msg.removeReaction("👆", event.user!!).queue()
-                }
-                "👇" -> {
-                    data.counters[key] = (data.counters[key] ?: 0) - 1
-                    msg.removeReaction("👇", event.user!!).queue()
-                }
-            }
-            msg.editMessage("$key: ${data.counters[key] ?: 0}").queue()
-        }
-    }
-
     Command("szavazás", "én egy demokratikusan megválasztott bot vagyok") {
         if (it.contentRaw == ".szavazás") {
             it.channel.sendMessage(
@@ -268,24 +213,22 @@ fun setBasicCommands() {
     }
 
     Command("szegz", "nagyon romi") {
-        val userFrom = it.author.asMention
         val userTo = it.contentRaw.split(' ')[1]
-        it.channel.sendMessage("$userFrom megszegzeli őt: $userTo").queue { msg ->
+        it.channel.sendMessage("${it.author.asMention} megszegzeli őt: $userTo").queue { msg ->
             msg.addReaction(listOf("❤️", "\uD83D\uDE0F", "\uD83D\uDE1C", "\uD83D\uDE2E").random()).queue()
         }
     }.setIsNSFW(true)
 
     Command("mesék", "pár jó mese, amit érdemes nézni") {
         it.channel.sendMessage(
-            EmbedBuilder()
-                .setTitle("Mesék")
-                .setDescription("Pár jó mese, amit érdemes nézni.")
-                .addField("Alpha Betas", "On YouTube from VanossGaming", true)
+            EmbedBuilder().create("Mesék", "Pár jó mese, amit érdemes nézni.")
+                .addField("Alpha Betas", "VanossGaming YouTube", true)
                 .addField("Disenchantment", "Netflix", true)
                 .addField("Final Space", "Netflix", true)
-                .addField("Helluva Boss", "On YouTube from Vivziepop", true)
-                .addField("Samurai Jack", "", true)
-                .addField("Sonic Boom", "On YouTube", true)
+                .addField("Helluva Boss", "Vivziepop YouTube", true)
+                .addField("Rick & Moty", "IndaVideo?", true)
+                .addField("Samurai Jack", "?", true)
+                .addField("Sonic Boom", "YouTube", true)
                 .build()
         ).queue { msg -> msg.makeRemovable() }
     }
