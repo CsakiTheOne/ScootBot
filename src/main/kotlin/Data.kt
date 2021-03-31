@@ -60,7 +60,7 @@ class Data() {
 
         fun log(sender: String, message: String) {
             log += "${
-                LocalDateTime.now().format(DateTimeFormatter.ofPattern("YYYY. MM. DD. HH:mm.ss"))
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("YYYY. MM. dd. HH:mm.ss"))
             } [${sender.toUpperCase()}]: $message\n"
         }
 
