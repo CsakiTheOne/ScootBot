@@ -100,7 +100,7 @@ fun setHelp() {
 
     Command("help", "ÁÁÁÁÁÁÁÁÁ!!!") {
         val helpMessage = "**Parancsok (mindegyik elé `${Data.prefix}` vagy szólítsd meg Gombócot):**\n" +
-                bot.commands.filter { c -> c.tags.contains(Command.TAG_BASIC) }.map { c -> c.toString() }.sorted()
+                bot.commands.filter { c -> c.tags.contains(Command.TAG_BASIC) }.map { c -> c.toString() }.toHashSet().sorted()
                         .joinToString("\n")
         it.channel.sendMessage(
                 EmbedBuilder().create("Gombóc segítség", helpMessage)
