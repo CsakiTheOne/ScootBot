@@ -50,7 +50,6 @@ class AudioModule {
 
         const val SOUND_BABABOOEY = "https://youtu.be/U_cPir6MwLM"
         const val SOUND_BRUH = "https://youtu.be/2ZIpFytCSVc"
-        const val SOUND_HOPELIGHT = "./hopelight.ogg"
         const val SOUND_MORNING = "https://youtu.be/7T_YtklLyyo"
         const val SOUND_OTTER = "https://www.youtube.com/watch?v=H7FbKnzKz4U&ab_channel=JarredBTwin2"
         const val SOUND_VIBING20S = "https://www.youtube.com/watch?v=M94eN-YLbOs&ab_channel=EvanKing"

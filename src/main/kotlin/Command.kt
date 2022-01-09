@@ -65,11 +65,12 @@ class Command(val head: String, val description: String, private val action: (ms
 
     override fun toString(): String {
         if (isTrigger) return "$description ||`$head`||"
-        return ".$head - $description"
+        return "${Data.prefix}$head - $description"
     }
 
     companion object {
         val TAG_BASIC = "basic"
         val TAG_GAME = "game"
+        val TAG_NSFW = "nsfw"
     }
 }

@@ -38,7 +38,7 @@ class Bot(token: String) : ListenerAdapter() {
     override fun onMessageReceived(event: MessageReceivedEvent) {
         val msg = event.message
         val content = msg.contentRaw.replace("<@!", "<@")
-            .replace(self.asMention + " ", ".")
+            .replace(self.asMention + " ", Data.prefix)
             .removeSurrounding("||")
         if (!msg.isFromGuild) {
             Data.log("Bot", "Private message from ${msg.author.asTag} (Channel id: ${msg.channel.id}): $content")
