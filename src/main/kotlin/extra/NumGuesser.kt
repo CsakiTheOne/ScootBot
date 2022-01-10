@@ -1,9 +1,8 @@
 package extra
 
-import Bot.Companion.makeRemovable
 import Global.Companion.data
-import Global.Companion.jda
 import net.dv8tion.jda.api.entities.Message
+import net.dv8tion.jda.api.interactions.components.Button
 
 class NumGuesser(
     val channelId: String,
@@ -27,9 +26,10 @@ class NumGuesser(
                 x == num -> {
                     msg.channel.editMessageById(
                         messageId,
-                        "${msg.contentRaw}\n${msg.author.name} eltalálta, hogy a szám $x! 🎉\nÚj játék: `.számkitaláló`"
-                    ).queue { edited ->
-                        edited.makeRemovable()
+                        "${msg.contentRaw}\n${msg.author.name} eltalálta, hogy a szám $x! 🎉\nÚj játék: `${Data.prefix}számkitaláló`"
+                    )
+                        .setActionRow(Button.primary("close", "❌"))
+                        .queue { edited ->
                         if (tags.contains("hanna")) {
                             data.diary("${msg.author.asTag} kitalálta a számot a legnehezebb szinten.")
                         }

@@ -14,7 +14,7 @@ repositories {
 }
 
 dependencies {
-    implementation("net.dv8tion:JDA:4.2.0_241")
+    implementation("net.dv8tion:JDA:5.0.0-alpha.3")
     implementation("ch.qos.logback:logback-classic:1.2.10")
     implementation("com.google.code.gson:gson:2.8.9")
     implementation("com.sedmelluq:lavaplayer:1.3.73")

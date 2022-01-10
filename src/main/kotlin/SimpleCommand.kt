@@ -1,4 +1,5 @@
-import Bot.Companion.makeRemovable
+import extra.RedditAPI
+import net.dv8tion.jda.api.interactions.components.Button
 import java.io.File
 
 class SimpleCommand(
@@ -13,15 +14,19 @@ class SimpleCommand(
     var tags: String?,
 ) {
     fun toCommand(): Command {
-        val cmd = Command(head, description ?: "") {
-            when (actionType) {
+        val cmd = Command(head, description ?: if (actionType == "reddit_random") "r/$actionText" else "") {
+            val msg = when (actionType) {
                 "message" -> it.channel.sendMessage(actionText ?: "")
-                    .queue { msg -> if (actionData?.contains("❌") == true) msg.makeRemovable() }
                 "reply" -> it.reply(actionText ?: "")
-                    .queue { msg -> if (actionData?.contains("❌") == true) msg.makeRemovable() }
                 "file" -> it.channel.sendFile(File(actionText ?: ""))
-                    .queue { msg -> if (actionData?.contains("❌") == true) msg.makeRemovable() }
+                "reddit_random" -> {
+                    val post = RedditAPI.getRandomPost(actionText ?: "")
+                    it.channel.sendMessage("${it.author.asMention} kérésére egy poszt r/$actionText sub-ról:\n$post")
+                }
+                else -> null
             }
+            if (actionData?.contains("❌") == true) msg?.setActionRow(Button.primary("close", "❌"))
+            msg?.queue()
         }.setIsAdminOnly(isAdminOnly == true).setIsNSFW(isNSFW == true).setIsTrigger(isTrigger == true)
         val tagsList = tags?.split(',')?.map { tag -> tag.trim() } ?: mutableListOf()
         cmd.tags.addAll(tagsList)

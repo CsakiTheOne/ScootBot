@@ -39,7 +39,7 @@ class Data() {
     }
 
     fun diary(embed: MessageEmbed, callback: ((Message) -> Unit)? = null) {
-        diaryChannel.toTextChannel()?.sendMessage(embed)?.queue {
+        diaryChannel.toTextChannel()?.sendMessageEmbeds(embed)?.queue {
             it.crosspost().queue()
             callback?.invoke(it)
         }

@@ -1,13 +1,11 @@
 package extra
 
-import Bot.Companion.makeRemovable
 import Data
 import Global.Companion.data
 import Global.Companion.jda
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageChannel
-import net.dv8tion.jda.api.entities.TextChannel
 
 class Hangman(
     val authorId: String,
@@ -27,15 +25,15 @@ class Hangman(
     }
 
     fun guess(msg: Message) {
-        if ("""a\.[a-záéíóöőúüű]""".toRegex().matches(msg.contentRaw)) {
-            val c = msg.contentRaw.toLowerCase()[2]
+        val content = msg.contentRaw.toLowerCase()
+        if ("""a\.[a-záéíóöőúüű]""".toRegex().matches(content)) {
+            val c = content[2]
             if (!chars.contains(c)) chars += c
         }
-        else if ("""[a-záéíóöőúüű]""".toRegex().matches(msg.contentRaw)) {
-            val c = msg.contentRaw.toLowerCase()
-            if (!chars.contains(c)) chars += c
+        else if ("""[a-záéíóöőúüű]""".toRegex().matches(content)) {
+            if (!chars.contains(content)) chars += content
         }
-        else if (msg.contentRaw == "a.?" && modifiers.contains("❓")) {
+        else if (content == "a.?" && modifiers.contains("❓")) {
             val randomChar = text.filter { c -> !toHangedText().contains(c) }.random()
             chars += randomChar
             chars += "❓"
@@ -74,7 +72,6 @@ class Hangman(
                     "```$textPartPlayers"
             channel.sendMessage(messageText).queue { msg ->
                 messageId = msg.id
-                if (getIsGameEnded() != 0) msg.makeRemovable()
             }
             if (getIsGameEnded() == 2) {
                 data.diary("${author?.asTag}```\n${graphcs.last()}\n$text\n```$textPartPlayers")

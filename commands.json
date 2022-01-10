@@ -12,31 +12,79 @@
       "tags": ""
     },
     {
-      "head": "invite",
-      "description": "hívj meg a saját szerveredre!",
-      "actionType": "message",
-      "actionText": "<https://discord.com/oauth2/authorize?client_id\u003d783672257347715123\u0026scope\u003dbot\u0026permissions\u003d8>",
-      "actionData": "❌"
-    },
-    {
-      "head": "f",
-      "description": "press :regional_indicator_f: to pay respect",
-      "actionType": "file",
-      "actionText": "./f.png",
-      "actionData": "❌"
-    },
-    {
-      "head": "repost",
-      "description": "vót má'",
-      "actionType": "file",
-      "actionText": "./repost.jpg",
-      "actionData": "❌"
-    },
-    {
       "head": "fejlesztő",
       "description": "ha érdekel ki alkotott",
       "actionType": "message",
       "actionText": "A készítőm: **@CsakiTheOne#8589**. De sokan segítettek jobbá válni ❤"
+    },
+    {
+      "head": "meme",
+      "actionType": "reddit_random",
+      "actionText": "memes",
+      "actionData": "❌"
+    },
+    {
+      "head": "ass",
+      "actionType": "reddit_random",
+      "actionText": "ass",
+      "actionData": "❌",
+      "isNSFW": true
+    },
+    {
+      "head": "boobs",
+      "actionType": "reddit_random",
+      "actionText": "boobs",
+      "actionData": "❌",
+      "isNSFW": true
+    },
+    {
+      "head": "cute",
+      "actionType": "reddit_random",
+      "actionText": "TooCuteForPorn",
+      "actionData": "❌",
+      "isNSFW": true
+    },
+    {
+      "head": "extrasmall",
+      "actionType": "reddit_random",
+      "actionText": "ExtraSmall",
+      "actionData": "❌",
+      "isNSFW": true
+    },
+    {
+      "head": "kneesocks",
+      "actionType": "reddit_random",
+      "actionText": "kneesocks",
+      "actionData": "❌",
+      "isNSFW": true
+    },
+    {
+      "head": "nsfw",
+      "actionType": "reddit_random",
+      "actionText": "nsfw",
+      "actionData": "❌",
+      "isNSFW": true
+    },
+    {
+      "head": "pear",
+      "actionType": "reddit_random",
+      "actionText": "PearGirls",
+      "actionData": "❌",
+      "isNSFW": true
+    },
+    {
+      "head": "ratio",
+      "actionType": "reddit_random",
+      "actionText": "theratio",
+      "actionData": "❌",
+      "isNSFW": true
+    },
+    {
+      "head": "thiccer",
+      "actionType": "reddit_random",
+      "actionText": "thiccerthanyouthought",
+      "actionData": "❌",
+      "isNSFW": true
     }
   ]
 }

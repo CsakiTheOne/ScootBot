@@ -1,5 +1,4 @@
 import Bot.Companion.create
-import Bot.Companion.makeRemovable
 import Bot.Companion.simplify
 import Global.Companion.bot
 import Global.Companion.data
@@ -11,6 +10,7 @@ import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent
+import net.dv8tion.jda.api.interactions.components.Button
 import java.awt.Color
 import java.util.*
 import javax.script.ScriptEngine
@@ -29,7 +29,6 @@ fun reload() {
     bot.commands.clear()
     setHelp()
     setAdminCommands()
-    setNsfwCommands()
     setBasicCommands()
     //setBasicTriggers()
     setClickerGame()
@@ -62,7 +61,6 @@ fun main() {
                 Activity.watching("🟧⬛"),
         )
         jda.presence.activity = activities.random()
-        Data.log("Activity manager", jda.presence.activity.toString())
 
         //Pinger.pingMinecraftServer(Secret.getMCPort("automatic ping by Timer"))
     }, 3000L, (1000 * 60 * 5).toLong())
@@ -72,53 +70,66 @@ fun setHelp() {
     Command("help admin", "") {
         val helpMessage = "**Parancsok (prefix: `${Data.prefix}`):**\n" +
                 bot.commands.filter { c -> c.isAdminOnly }.map { c -> c.toString() }.sorted().joinToString("\n")
-        it.channel.sendMessage(
-                EmbedBuilder()
-                        .create("Segítség", helpMessage)
-                        .build()
-        ).queue { msg -> msg.makeRemovable() }
+        it.channel.sendMessageEmbeds(
+            EmbedBuilder()
+                .create("Segítség", helpMessage)
+                .build()
+        )
+            .setActionRow(Button.primary("close", "❌"))
+            .queue()
     }.setIsAdminOnly(true)
 
     Command("help játék", "nézd meg milyen játékokat játszhatsz") {
         val helpMessage = "**Játékok (prefix: `${Data.prefix}`):**\n" +
                 bot.commands.filter { c -> c.tags.contains(Command.TAG_GAME) }.map { c -> c.toString() }.sorted()
                         .joinToString("\n")
-        it.channel.sendMessage(
+        it.channel.sendMessageEmbeds(
                 EmbedBuilder().create("Játékok", helpMessage)
                         .build()
-        ).queue { msg -> msg.makeRemovable() }
+        )
+            .setActionRow(Button.primary("close", "❌"))
+            .queue()
     }
 
     Command("help trigger", "Booba magától reagál dolgokra") {
         val helpMessage = "**Dolgok, amikre Booba önállóan reagálhat:**\n" +
                 bot.commands.filter { c -> c.isTrigger }.map { c -> c.toString() }.sorted().joinToString("\n")
-        it.channel.sendMessage(
+        it.channel.sendMessageEmbeds(
                 EmbedBuilder().create("Booba trigger-ek", helpMessage)
                         .setFooter("Regex: <https://regexr.com/>")
                         .build()
-        ).queue { msg -> msg.makeRemovable() }
+        )
+            .setActionRow(Button.primary("close", "❌"))
+            .queue()
     }
 
     Command("help", "ÁÁÁÁÁÁÁÁÁ!!!") {
-        val helpMessage = "**Parancsok (mindegyik elé `${Data.prefix}`):**\n" +
-                "NSFW:\n" +
-                bot.commands.filter { c -> c.tags.contains(Command.TAG_NSFW) }.map { c -> c.toString() }.toHashSet().sorted()
-                    .joinToString("\n") +
-                "\nNORMÁL PARANCSOK:\n" +
-                bot.commands.filter { c -> c.tags.contains(Command.TAG_BASIC) && !c.tags.contains(Command.TAG_NSFW) }.map { c -> c.toString() }.toHashSet().sorted()
-                        .joinToString("\n")
-        it.channel.sendMessage(
-                EmbedBuilder().create("Segítség", helpMessage)
-                        .build()
-        ).queue { msg -> msg.makeRemovable() }
+        it.channel.sendMessageEmbeds(
+                EmbedBuilder().create("Segítség", "Minden parancs elé `${Data.prefix}`")
+                    .addField("NSFW parancsok", bot.commands.filter { c -> c.isNSFW }.map { c -> c.toString() }.toHashSet().sorted()
+                        .joinToString("\n"), false)
+                    .addField("Normál parancsok", bot.commands.filter { c -> c.tags == mutableSetOf(Command.TAG_BASIC) && !c.isNSFW }.map { c -> c.toString() }.toHashSet().sorted()
+                        .joinToString("\n"), false)
+                    .build()
+        )
+            .setActionRow(
+                //Button.primary("help játék", "Játékok"),
+                Button.primary("close", "❌")
+            )
+            .queue()
     }
 }
 
 fun setAdminCommands() {
     Command("reload", "adatok betöltése újra") {
         reload()
-        it.channel.sendMessage("Adatok és ${bot.commands.size} (${simpleCommandManager.commands.size} JSON) parancs betöltve. ✅")
-                .queue { msg -> msg.makeRemovable() }
+        it.channel.sendMessage(
+            "Adatok és parancsok (${bot.commands.size}) betöltve. ✅\n" +
+                    "JSON parancsok (${simpleCommandManager.commands.size}):\n" +
+                    simpleCommandManager.commands.joinToString { sc -> sc.head }
+        )
+            .setActionRow(Button.primary("close", "❌"))
+            .queue()
     }.setIsAdminOnly(true)
 
     Command("status offline", "offline-ra állítja a botot") {
@@ -142,7 +153,9 @@ fun setAdminCommands() {
     }.setIsAdminOnly(true)
 
     Command("log read", "részletes napló olvasása") {
-        it.channel.sendMessage("```\n" + Data.logRead() + "\n```").queue { msg -> msg.makeRemovable() }
+        it.channel.sendMessage("```\n" + Data.logRead() + "\n```")
+            .setActionRow(Button.primary("close", "❌"))
+            .queue()
     }.setIsAdminOnly(true)
 
     Command("clear", "utolsó üzenetek törlése") {
@@ -161,39 +174,12 @@ fun setAdminCommands() {
     }.setIsAdminOnly(true)
 }
 
-fun setNsfwCommands() {
-    fun createNsfwCmd(head: String, subreddit: String = "") {
-        Command(head, if (subreddit.isEmpty()) "" else "(r/$subreddit)") {
-            val post = RedditAPI.getRandomPost(if (subreddit.isEmpty()) head else subreddit)
-            it.channel.sendMessage("${it.author.asMention} kérésére:\n$post")
-                .queue { msg ->
-                    msg.makeRemovable()
-                }
-        }.setIsNSFW(true).addTag(Command.TAG_NSFW)
-    }
-
-    createNsfwCmd("ass")
-    createNsfwCmd("boobs")
-    createNsfwCmd("cute", "TooCuteForPorn")
-    createNsfwCmd("extrasmall", "ExtraSmall")
-    createNsfwCmd("kneesocks")
-    createNsfwCmd("nsfw")
-    createNsfwCmd("pear", "PearGirls")
-    createNsfwCmd("ratio", "theratio")
-    createNsfwCmd("thiccer", "thiccerthanyouthought")
-}
-
 fun setBasicCommands() {
-    Command("ping", "🏓") {
-        it.channel.sendMessage(":ping_pong:").queue { msg -> msg.makeRemovable() }
-        //Pinger.pingMinecraftServer(Secret.getMCPort("manual ping with .ping command by ${it.author.asTag}"))
-    }
-
     Command("tagok", "hány ember van ezen a szerveren?") {
         it.guild.loadMembers().onSuccess { members ->
             val csakiStatus =
                     members.firstOrNull { m -> m.id == Data.admins[0].id }?.onlineStatus ?: OnlineStatus.UNKNOWN
-            it.channel.sendMessage(
+            it.channel.sendMessageEmbeds(
                     EmbedBuilder()
                             .setTitle("Szerver tagok (${members.size})")
                             .setDescription(
@@ -206,12 +192,14 @@ fun setBasicCommands() {
                                             "Bot tulaj (${Data.admins[0].name}): $csakiStatus"
                             )
                             .build()
-            ).queue { msg -> msg.makeRemovable() }
+            )
+                .setActionRow(Button.primary("close", "❌"))
+                .queue()
         }
     }
 
     Command("mesék", "pár jó mese, amit érdemes nézni") {
-        it.channel.sendMessage(
+        it.channel.sendMessageEmbeds(
                 EmbedBuilder().create("Mesék", "Pár jó mese, amit érdemes nézni.")
                         .addField("Alpha Betas", "VanossGaming YouTube", true)
                         .addField("Disenchantment", "Netflix", true)
@@ -222,23 +210,28 @@ fun setBasicCommands() {
                         .addField("Sonic Boom", "YouTube", true)
                         .addField("Tapadókorong ember", "YouTube", true)
                         .build()
-        ).queue { msg -> msg.makeRemovable() }
+        )
+            .setActionRow(Button.primary("close", "❌"))
+            .queue()
     }
 
     Command("matek", "írj be egy műveletet és kiszámolom neked") {
         if (it.contentRaw == "${Data.prefix}matek") {
-            it.channel.sendMessage("Így használd a parancsot: `.matek <művelet>`\nPéldául: `.matek 2 + 2`")
-                    .queue { msg -> msg.makeRemovable() }
+            it.channel.sendMessage("Így használd a parancsot: `.matek <művelet>`\nPéldául: `${Data.prefix}matek 2 + 2`")
+                .setActionRow(Button.primary("close", "❌"))
+                .queue()
         } else {
             val jsMathMap = hashMapOf(
                     "sin" to "Math.sin", "cos" to "Math.cos", "tan" to "Math.tan", "pi" to "Math.PI", "sqrt" to "Math.sqrt",
                     "random" to "Math.random()", "rdm" to "Math.random()", "pow" to "Math.pow", "abs" to "Math.abs"
             )
             val engine: ScriptEngine = ScriptEngineManager().getEngineByName("JavaScript")
-            var input = it.contentRaw.removePrefix("${Data.prefix}matek ")
+            var input = it.contentRaw.removePrefix("${Data.prefix}matek").trim()
             for (pair in jsMathMap) input = input.replace(pair.key, pair.value)
             val ans = engine.eval(input) as Number
-            it.channel.sendMessage("$input = $ans").queue { msg -> msg.makeRemovable() }
+            it.channel.sendMessage("$input = $ans")
+                .setActionRow(Button.primary("close", "❌"))
+                .queue()
         }
     }
 
@@ -251,12 +244,14 @@ fun setBasicCommands() {
         } catch (ex: Exception) {
             ex.message
         }
-        it.channel.sendMessage(
+        it.channel.sendMessageEmbeds(
                 EmbedBuilder()
                         .setTitle("JavaScript")
                         .setDescription("```js\n$input\n```\n`> $ans`")
                         .build()
-        ).queue { msg -> msg.makeRemovable() }
+        )
+            .setActionRow(Button.primary("close", "❌"))
+            .queue()
     }
 
     /*
@@ -348,7 +343,9 @@ fun setBasicCommands() {
 
     Command("hype", "ébreszd fel a szervert reakció gyűjtős játékkal") {
         if (it.contentRaw == "${Data.prefix}hype") {
-            it.channel.sendMessage("A parancs használata: `${Data.prefix}hype <szám>`").queue { msg -> msg.makeRemovable() }
+            it.channel.sendMessage("A parancs használata: `${Data.prefix}hype <szám>`")
+                .setActionRow(Button.primary("close", "❌"))
+                .queue()
         } else {
             lateinit var listener: (e: MessageReactionAddEvent, m: Message) -> Unit
             val max = it.contentRaw.removePrefix("${Data.prefix}hype ").toInt()
@@ -423,7 +420,9 @@ fun setBasicTriggers() {
 
     Command("kő|papír|olló", "kő papír olló") {
         val answers = listOf("Kő \uD83E\uDEA8", "Papír \uD83E\uDDFB", "Olló ✂️")
-        it.reply(answers.random()).queue { msg -> msg.makeRemovable() }
+        it.reply(answers.random())
+            .setActionRow(Button.primary("close", "❌"))
+            .queue()
     }.setIsTrigger(true).addTag(Command.TAG_GAME)
 
     Command(".*szeret.*", "szeretet") {
@@ -478,24 +477,26 @@ fun setBasicTriggers() {
                 .setTitle("Említés egy üzenetben (Nem biztos, hogy PONT rólad van szó, csak azt figyelem hogy benne van-e egy bizonyos szöveg az üzenetben)")
                 .setDescription("$guildName\n**Üzenet:** ${it.contentRaw}\n**Írta:** ${it.author.asTag}")
                 .build()
-        jda.getPrivateChannelById(Data.admins[0].privateChannel)?.sendMessage(embed)
-                ?.queue { msg -> msg.makeRemovable() }
+        jda.getPrivateChannelById(Data.admins[0].privateChannel)?.sendMessageEmbeds(embed)
+            ?.setActionRow(Button.primary("close", "❌"))
+            ?.queue()
     }.setIsTrigger(true)
 }
 
 fun setClickerGame() {
     Command("clicker", "mint a cookie clicker") {
-        it.channel.sendMessage(
+        it.channel.sendMessageEmbeds(
                 EmbedBuilder()
                         .setColor(Color((0..255).random(), (0..255).random(), (0..255).random()))
                         .setTitle("Clicker játék")
                         .setDescription("🌍: ${data.clicks["global"] ?: 0}\n🖱: 0")
                         .build()
-        ).queue { clickerMessage ->
+        )
+            .setActionRow(Button.primary("close", "❌"))
+            .queue { clickerMessage ->
             data.clickerMessageIds.add(clickerMessage.id)
             data.save()
             clickerMessage.addReaction("\uD83D\uDDB1").queue()
-            clickerMessage.makeRemovable()
         }
     }.addTag(Command.TAG_GAME)
 
@@ -510,7 +511,7 @@ fun setClickerGame() {
         data.clicks["global"] = (data.clicks["global"] ?: 0) + 1
         data.save()
         val clicks = (msg.embeds[0].description!!.split("\n")[1].split(":")[1].trim().toInt()) + 1
-        msg.editMessage(
+        msg.editMessageEmbeds(
                 EmbedBuilder()
                         .setColor(Color((0..255).random(), (0..255).random(), (0..255).random()))
                         .setTitle("Clicker játék")
@@ -525,7 +526,7 @@ fun setClickerGame() {
 fun setHangmanGame() {
     Command("akasztófa", "G--bóc") {
         if (it.contentRaw == "${Data.prefix}akasztófa") {
-            it.channel.sendMessage(
+            it.channel.sendMessageEmbeds(
                     EmbedBuilder().setTitle("Akasztófa")
                             .setDescription(
                                     "Statisztikák: `${Data.prefix}akasztófa stat`\n" +
@@ -535,13 +536,19 @@ fun setHangmanGame() {
                                             "Játék módosítók: ❓segítségek"
                             )
                             .build()
-            ).queue { msg -> msg.makeRemovable() }
+            )
+                .setActionRow(Button.primary("close", "❌"))
+                .queue()
         } else if (it.contentRaw == "${Data.prefix}akasztófa clear") {
             val isPlaying = data.hangmanGames.any { h -> h.guildId == it.guild.id && h.channelId == it.channel.id }
             if (isPlaying) {
                 data.hangmanGames.removeIf { h -> h.guildId == it.guild.id && h.channelId == it.channel.id }
-                it.channel.sendMessage("Akasztófa játék törölve :x:").queue { msg -> msg.makeRemovable() }
-            } else it.channel.sendMessage("Itt nem volt akasztófa játék.").queue { msg -> msg.makeRemovable() }
+                it.channel.sendMessage("Akasztófa játék törölve :x:")
+                    .setActionRow(Button.primary("close", "❌"))
+                    .queue()
+            } else it.channel.sendMessage("Itt nem volt akasztófa játék.")
+                .setActionRow(Button.primary("close", "❌"))
+                .queue()
         } else if (it.contentRaw.startsWith("${Data.prefix}akasztófa stat")) {
             val embed = EmbedBuilder()
                     .setTitle("Akasztófa statisztikák (2021. 03. 13. óta)")
@@ -557,7 +564,9 @@ fun setHangmanGame() {
                     embed.addField(jda.getUserById(hgs.playerId)?.asTag, hgs.toString(), true)
                 }
             }
-            it.channel.sendMessage(embed.build()).queue { msg -> msg.makeRemovable() }
+            it.channel.sendMessageEmbeds(embed.build())
+                .setActionRow(Button.primary("close", "❌"))
+                .queue()
         } else {
             if (data.hangmanGames.any { hg -> hg.channelId == it.channel.id }) {
                 val lastHangGame = data.hangmanGames.first { hg -> hg.channelId == it.channel.id }
@@ -572,11 +581,12 @@ fun setHangmanGame() {
                     "**Akasztófa (${it.author.asTag})** Írj egy betűt a kezdéshez!\n```\n${
                         Hangman.toHangedText(param, "")
                     }\n```"
-            ).queue { msg ->
+            )
+                .setActionRow(Button.primary("close", "❌"))
+                .queue { msg ->
                 val newGame = Hangman(it.author.id, it.guild.id, it.channel.id, param, mods, msg.id, "")
                 data.hangmanGames.add(newGame)
                 if (!newGame.toHangedText().contains("-")) {
-                    msg.makeRemovable()
                     data.hangmanGames.remove(newGame)
                 }
                 data.save()
@@ -593,13 +603,13 @@ fun setHangmanGame() {
     Command("""[a-záéíóöőúüű?]|(a\.[a-záéíóöőúüű?])""", "akasztófa tipp") {
         val hangGame = data.hangmanGames.first { h -> h.guildId == it.guild.id && h.channelId == it.channel.id }
         hangGame.guess(it)
-    }.setIsTrigger(true)
+    }.setIsTrigger(true).setIgnoreCase(true)
 }
 
 fun setNumGuesserGame() {
     Command("számkitaláló", "gondolok egy számra") {
         if (it.contentRaw == "${Data.prefix}számkitaláló") {
-            it.channel.sendMessage(
+            it.channel.sendMessageEmbeds(
                     EmbedBuilder()
                             .setTitle("Számkitaláló játékmódok:")
                             .setDescription(
@@ -607,7 +617,9 @@ fun setNumGuesserGame() {
                                             "Hanna: `${Data.prefix}számkitaláló hanna` (elég nagy kihívás)"
                             )
                             .build()
-            ).queue { msg -> msg.makeRemovable() }
+            )
+                .setActionRow(Button.primary("close", "❌"))
+                .queue()
         } else {
             val param = it.contentRaw.split(" ")[1]
             val introText: String

@@ -46,7 +46,7 @@ class Pinger {
             if (isOnline) text = "**$version**\n$text"
             text += if (players.isEmpty()) "Nincs fönt senki a szerveren."
             else "**Játékosok ($playerCount/$playerMax)**\n${players.joinToString()}"
-            channel?.editMessageById(
+            channel?.editMessageEmbedsById(
                 "821989475436724275",
                 EmbedBuilder()
                     .setTitle("Minecraft szerver infó")

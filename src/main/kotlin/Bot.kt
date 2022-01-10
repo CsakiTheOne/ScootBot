@@ -2,10 +2,12 @@ import Global.Companion.data
 import Global.Companion.jda
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDABuilder
+import net.dv8tion.jda.api.MessageBuilder
 import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceMoveEvent
+import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
@@ -37,30 +39,21 @@ class Bot(token: String) : ListenerAdapter() {
 
     override fun onMessageReceived(event: MessageReceivedEvent) {
         val msg = event.message
-        val content = msg.contentRaw.replace("<@!", "<@")
-            .replace(self.asMention + " ", Data.prefix)
-            .removeSurrounding("||")
-        if (!msg.isFromGuild) {
-            Data.log("Bot", "Private message from ${msg.author.asTag} (Channel id: ${msg.channel.id}): $content")
+        val command = findCommand(event.author, msg.contentRaw) ?: return
+        try {
+            msg.delete().queue()
         }
-        if (Data.admins.any { it.id == msg.author.id } && commands.filter { c -> c.isAdminOnly }
-                .any { c -> c.matches(content) }) {
-            val command = commands.filter { c -> c.isAdminOnly }.first { c -> c.matches(content) }
-            if (msg.isFromGuild) msg.delete().queue()
-            command.run(msg)
+        catch (_: Exception) { }
+        command.run(msg)
+    }
+
+    override fun onButtonClick(event: ButtonClickEvent) {
+        if (event.button?.label == "❌") {
+            event.message.delete().queue()
             return
         }
-        if (commands.filter { c -> c.tags.contains(Command.TAG_BASIC) }.any { c -> c.matches(content) }) {
-            val command = commands.filter { c -> c.tags.contains(Command.TAG_BASIC) }.first { c -> c.matches(content) }
-            if (msg.isFromGuild) msg.delete().queue()
-            command.run(msg)
-            return
-        }
-        if (msg.author.isBot) return
-        if (commands.filter { c -> c.isTrigger }.any { c -> c.matches(content) }) {
-            val filtered = commands.filter { c -> c.isTrigger && c.matches(content) }
-            for (c in filtered) c.run(msg)
-        }
+        findCommand(event.user, event.button?.id ?: "")?.run(event.message)
+        event.deferEdit()
     }
 
     override fun onMessageReactionAdd(event: MessageReactionAddEvent) {
@@ -95,6 +88,20 @@ class Bot(token: String) : ListenerAdapter() {
         }
     }
 
+    private fun findCommand(author: User, text: String): Command? {
+        val content = text.replace("<@!", "<@")
+            .replace(self.asMention + " ", Data.prefix)
+            .removeSurrounding("||")
+        if (Data.admins.any { it.id == author.id } && commands.filter { c -> c.isAdminOnly }.any { c -> c.matches(content) }) {
+            return commands.firstOrNull { c -> c.isAdminOnly && c.matches(content) }
+        }
+        if (commands.filter { c -> c.tags.contains(Command.TAG_BASIC) }.any { c -> c.matches(content) }) {
+            return commands.firstOrNull { c -> c.tags.contains(Command.TAG_BASIC) && c.matches(content) }
+        }
+        if (author.isBot) return null
+        return commands.firstOrNull { c -> c.isTrigger && c.matches(content) }
+    }
+
     fun addReactionListener(listener: (event: MessageReactionAddEvent, msg: Message) -> Unit): (event: MessageReactionAddEvent, msg: Message) -> Unit {
         reactionListeners.add(listener)
         return listener
@@ -103,10 +110,6 @@ class Bot(token: String) : ListenerAdapter() {
     companion object {
         fun EmbedBuilder?.create(title: String, description: String): EmbedBuilder {
             return EmbedBuilder().setTitle(title).setDescription(description).setColor(Color(0, 128, 255))
-        }
-
-        fun Message?.makeRemovable(callback: (() -> Unit)? = null) {
-            this?.addReaction("❌")?.queue { callback?.invoke() }
         }
 
         fun String.simplify(): String {
